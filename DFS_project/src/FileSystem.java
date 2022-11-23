@@ -3,7 +3,7 @@ import java.rmi.*;
 
 public interface FileSystem extends Remote {
     // Declaring the method prototypes
-    public int registerUser(String userName, String userPublicKey) throws RemoteException;
+    public String registerUser(String userName, String userPublicKey) throws RemoteException;
 
     public String createFile(String fileName) throws IOException;
 

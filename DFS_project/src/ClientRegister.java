@@ -4,7 +4,7 @@ public class ClientRegister {
     public static void main(String args[]) {
         String IP = "127.0.0.1";
         String port = "1234";
-        int serverAnswer;
+        String serverAnswer;
 
         if (args.length > 0) {
             try {

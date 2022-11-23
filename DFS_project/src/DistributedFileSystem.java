@@ -38,13 +38,18 @@ public class DistributedFileSystem extends UnicastRemoteObject implements FileSy
     }
 
     @Override
-    public int registerUser(String userName, String userPublicKey) {
-        if (users.containsKey(userName))
-            return 1;
+    public String registerUser(String userName, String userPublicKey) {
+        String ans;
+        if (users.containsKey(userName)) {
+            ans = "User '" + userName + "' already exists";
+            return ans;
+        }
 
         users.put(userName, userPublicKey);
         updateUsers();
-        return 0;
+        ans = "Registered new user '" + userName + "'";
+        System.out.println(ans);
+        return ans;
     }
 
     private void updateUsers() {
