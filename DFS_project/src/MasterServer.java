@@ -1,6 +1,5 @@
 import java.rmi.*;
 import java.rmi.registry.*;
-import java.util.HashMap;
 
 public class MasterServer {
     public static void main(String args[]) {
