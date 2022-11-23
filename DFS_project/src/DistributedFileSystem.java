@@ -4,20 +4,19 @@ import java.rmi.server.*;
 import java.util.*;
 
 public class DistributedFileSystem extends UnicastRemoteObject implements FileSystem {
-    private Map<Integer, List<String>> users;
+    private Map<String, String> users;
 
     DistributedFileSystem() throws RemoteException, IOException {
         super();
 
         // Set up config file for storing authorized users
-        users = new HashMap<Integer, List<String>>();
+        users = new HashMap<String, String>();
         File usersDB = new File("configurations/users");
         usersDB.getParentFile().mkdirs();
         if (usersDB.createNewFile()) {
             System.out.println("Created configuration file " + usersDB.getPath());
         } else {
             BufferedReader br = null;
-
             try {
                 br = new BufferedReader(new FileReader(usersDB));
                 String line = null;
@@ -25,18 +24,14 @@ public class DistributedFileSystem extends UnicastRemoteObject implements FileSy
                 while ((line = br.readLine()) != null) {
                     String[] parts = line.split(":");
 
-                    int userID = Integer.parseInt(parts[0].trim());
-                    String userName = parts[1].trim();
-                    String userPublicKey = parts[2].trim();
+                    String userName = parts[0].trim();
+                    String userPublicKey = parts[1].trim();
 
-                    if (userID > -1 && !userName.equals("") && !userPublicKey.equals("")) {
-                        ArrayList<String> nameAndKey = new ArrayList<String>();
-                        nameAndKey.add(userName);
-                        nameAndKey.add(userPublicKey);
-                        users.put(userID, nameAndKey);
-                    }
+                    if (!userName.equals("") && !userPublicKey.equals(""))
+                        users.put(userName, userPublicKey);
                 }
             } catch (Exception e) {
+                System.out.println("An error occurred.");
                 e.printStackTrace();
             } finally {
                 if (br != null) {
@@ -54,6 +49,7 @@ public class DistributedFileSystem extends UnicastRemoteObject implements FileSy
 
     @Override
     public int registerUser(String userName, String publicKey) {
+        // Update configurations/users with new hashmap
         return -1;
     }
 
