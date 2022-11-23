@@ -1,3 +1,0 @@
-Nov 23
-
-- When running the client and server in two separate locations on the same machine, files are stored at the server location.
