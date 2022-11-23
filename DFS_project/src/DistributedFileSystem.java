@@ -6,51 +6,58 @@ import java.util.*;
 public class DistributedFileSystem extends UnicastRemoteObject implements FileSystem {
     private Map<String, String> users;
 
+    @SuppressWarnings("unchecked")
     DistributedFileSystem() throws RemoteException, IOException {
         super();
 
         // Set up config file for storing authorized users
-        users = new HashMap<String, String>();
         File usersDB = new File("configurations/users");
         usersDB.getParentFile().mkdirs();
-        if (usersDB.createNewFile()) {
+        if (usersDB.createNewFile())
             System.out.println("Created configuration file " + usersDB.getPath());
-        } else {
-            BufferedReader br = null;
+        if (usersDB.length() != 0) {
             try {
-                br = new BufferedReader(new FileReader(usersDB));
-                String line = null;
-
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(":");
-
-                    String userName = parts[0].trim();
-                    String userPublicKey = parts[1].trim();
-
-                    if (!userName.equals("") && !userPublicKey.equals(""))
-                        users.put(userName, userPublicKey);
-                }
-            } catch (Exception e) {
+                FileInputStream fis = new FileInputStream(usersDB.getPath());
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                users = (HashMap<String, String>) ois.readObject();
+                fis.close();
+                ois.close();
+            } catch (IOException e) {
                 System.out.println("An error occurred.");
                 e.printStackTrace();
-            } finally {
-                if (br != null) {
-                    try {
-                        br.close();
-                    } catch (Exception e) {
-                        System.out.println("An error occurred.");
-                        e.printStackTrace();
-                    }
-                }
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Class not found.");
+                e.printStackTrace();
+                return;
             }
-            System.out.println("Loaded configuration file " + usersDB.getPath());
+        } else {
+            users = new HashMap<String, String>();
         }
+        System.out.println("Loaded configuration file " + usersDB.getPath());
     }
 
     @Override
-    public int registerUser(String userName, String publicKey) {
-        // Update configurations/users with new hashmap
-        return -1;
+    public int registerUser(String userName, String userPublicKey) {
+        if (users.containsKey(userName))
+            return 1;
+
+        users.put(userName, userPublicKey);
+        updateUsers();
+        return 0;
+    }
+
+    private void updateUsers() {
+        try {
+            FileOutputStream myFileOutStream = new FileOutputStream("configurations/users");
+            ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
+            myObjectOutStream.writeObject(users);
+            myObjectOutStream.close();
+            myFileOutStream.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
     /**
