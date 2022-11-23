@@ -1,7 +1,7 @@
 import java.rmi.*;
 import java.util.*;
 
-public class ClientRequest {
+public class Client {
     public static void main(String args[]) {
         String IP = "127.0.0.1";
         String port = "1234";
