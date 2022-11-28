@@ -1,0 +1,5 @@
+# compiled class files
+*.class
+
+# server configurations
+**/configurations/**
