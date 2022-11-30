@@ -11,7 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class Client {
 
     // Security variables
-    private static SecretKeySpec secretKey;
+    private static SecretKeySpec secretKeySpec;
     private static byte[] key;
 
     // Key setter
@@ -22,7 +22,7 @@ public class Client {
             sha = MessageDigest.getInstance("SHA-1");
             key = sha.digest(key);
             key = Arrays.copyOf(key, 16);
-            secretKey = new SecretKeySpec(key, "AES");
+            secretKeySpec = new SecretKeySpec(key, "AES");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -32,12 +32,12 @@ public class Client {
     public static String encryption(final String strToEncode, final String key) {
         try {
             setKey(key);
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // AES/GCM/NoPadding AES/ECB/PKCS5Padding
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // (or) AES/GCM/NoPadding
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
             return Base64.getEncoder()
                     .encodeToString(cipher.doFinal(strToEncode.getBytes("UTF-8")));
         } catch (Exception e) {
-            System.out.println("Error while encrypting: " + e.toString());
+            System.out.println("Something went wrong in encryption: " + e.toString());
         }
         return null;
     }
@@ -47,10 +47,10 @@ public class Client {
         try {
             setKey(key);
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
             return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecode)));
         } catch (Exception e) {
-            System.out.println("Error while decrypting: " + e.toString());
+            System.out.println("Something went wrong in decryption : " + e.toString());
         }
         return null;
     }
