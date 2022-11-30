@@ -1,7 +1,61 @@
+import java.nio.charset.StandardCharsets;
 import java.rmi.*;
 import java.util.*;
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
+
+    // Security variables
+    private static SecretKeySpec secretKeySpec;
+    private static byte[] key;
+
+    // Key setter
+    public static void setKey(final String myKey) {
+        MessageDigest sha = null;
+        try {
+            key = myKey.getBytes(StandardCharsets.UTF_8);
+            sha = MessageDigest.getInstance("SHA-1");
+            key = sha.digest(key);
+            key = Arrays.copyOf(key, 16);
+            secretKeySpec = new SecretKeySpec(key, "AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // File encryption
+    public static String encryption(final String strToEncode, final String key) {
+        try {
+            setKey(key);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // (or) AES/GCM/NoPadding
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+            return Base64.getEncoder()
+                    .encodeToString(cipher.doFinal(strToEncode.getBytes("UTF-8")));
+        } catch (Exception e) {
+            System.out.println("Something went wrong in encryption: " + e.toString());
+        }
+        return null;
+    }
+
+    // File decryption
+    public static String decryption(final String strToDecode, final String key) {
+        try {
+            setKey(key);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecode)));
+        } catch (Exception e) {
+            System.out.println("Something went wrong in decryption : " + e.toString());
+        }
+        return null;
+    }
+
+
     public static void main(String args[]) {
         String IP = "127.0.0.1";
         String port = "1234";
@@ -48,6 +102,7 @@ public class Client {
             e.printStackTrace();
         }
     }
+
 
     private static void help() {
         System.out.println("Write a command in the form of:");
