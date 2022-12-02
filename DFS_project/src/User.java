@@ -1,0 +1,37 @@
+import java.util.Comparator;
+
+public class User {
+    String ip;
+    String port;
+
+    String publicKey;
+    User(String ip, String port, String publicKey){
+        this.ip=ip;
+        this.port=port;
+        this.publicKey=publicKey;
+    }
+
+    class UserComparator implements Comparator<User> {
+
+        public int compare(User u1, User u2)
+        {
+            return u1.ip.compareTo(u2.ip);
+        }
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+}

@@ -9,10 +9,10 @@ public class ClientRegister {
         if (args.length > 0) {
             try {
                 // lookup method to find reference of remote object
-                FileSystem access = (FileSystem) Naming.lookup("rmi://" + IP + ":" + port + "/usingRMI");
+                RMIFileSystem access = (RMIFileSystem) Naming.lookup("rmi://" + IP + ":" + port + "/master");
 
-                serverAnswer = access.registerUser(args[0], "...");
-                System.out.println(serverAnswer);
+               // serverAnswer = access.registerUser(args[0], "...");
+               // System.out.println(serverAnswer);
             } catch (Exception e) {
                 System.out.println(e);
                 e.printStackTrace();

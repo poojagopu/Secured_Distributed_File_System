@@ -6,7 +6,7 @@ public class MasterServer {
         try {
             // Create an object of the interface
             // implementation class
-            FileSystem interface_obj = new DistributedFileSystem();
+            P2PMaster interface_obj = new P2PMasterImpl();
 
             // rmiregistry within the server JVM with
             // port number 1234
@@ -14,7 +14,7 @@ public class MasterServer {
 
             // Binds the remote object by the name
             // usingRMI
-            Naming.rebind("rmi://localhost:1234" + "/usingRMI", interface_obj);
+            Naming.rebind("rmi://192.168.56.1:1234" + "/master", interface_obj);
         } catch (Exception ae) {
             System.out.println(ae);
         }
