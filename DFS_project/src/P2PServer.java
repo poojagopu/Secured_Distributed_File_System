@@ -20,7 +20,6 @@ public class P2PServer {
         String userName = "ray";
         String userIP = "localhost";
         String userPort = "5678";
-        String userKey = "abcd";
 
         PublicKey publicKey;
         PrivateKey privateKey;

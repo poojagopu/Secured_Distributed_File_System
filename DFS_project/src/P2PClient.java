@@ -162,7 +162,6 @@ public class P2PClient {
     public static void main(String args[]) {
         String masterIP = "localhost";
         String masterport = "1234";
-        String serverAnswer;
         String userChoice;
 
         try {

@@ -3,13 +3,11 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
-    private Map<String, String> users; // username -> userPublicKey
+    // private Map<String, String> users; // username -> userPublicKey
     String path;
     private HashMap<String, Boolean> fileDeletion; // filePath-> isDeleted
 
-    @SuppressWarnings("unchecked")
     RMI_DFS() throws RemoteException, IOException {
         super();
         fileDeletion = new HashMap<>();
@@ -113,6 +111,5 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             fileDeletion.put(filePath, true);
             return "File Deleted Successfully";
         }
-
     }
 }
