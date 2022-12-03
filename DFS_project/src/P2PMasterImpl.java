@@ -31,7 +31,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 e.printStackTrace();
                 return;
             } catch (ClassNotFoundException e) {
-                System.out.println("Class not found.");
+                System.out.println("Clasrs not found.");
                 e.printStackTrace();
                 return;
             }
@@ -68,6 +68,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
     @Override
     public User getRandomPeer() throws RemoteException {
+        System.out.println("USers we have:");
+        System.out.println(allUsers);
         User[] userArray = allUsers.toArray(new User[allUsers.size()]);
         // generate a random number
         Random random = new Random();

@@ -23,11 +23,11 @@ public class P2PServer {
 
             // rmiregistry within the server JVM with
             // port number 1234
-            LocateRegistry.createRegistry(1234);
+            LocateRegistry.createRegistry(Integer.parseInt(userPort));
 
             // Binds the remote object by the name
             // usingRMI
-            Naming.rebind("rmi://localhost:1234" + "/master", interface_obj);
+            Naming.rebind("rmi://"+userIP+":"+userPort + "/master", interface_obj);
         } catch (Exception ae) {
             System.out.println(ae);
         }

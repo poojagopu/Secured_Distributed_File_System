@@ -58,8 +58,11 @@ public class P2PClient {
 
     public static void create(String filePath, P2PMaster masterObj){
         try{
+
             User user = masterObj.getRandomPeer();
+            System.out.println("Entering create");
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
+            System.out.println("Entering create second");
             String response = peer.createFile(filePath);
             System.out.println("File created successfully.");
             if(response!=null){
@@ -135,11 +138,11 @@ public class P2PClient {
 
 
     public static void main(String args[]) {
-        String masterIP = "127.0.0.1";
+        String masterIP = "192.168.56.1";
         String masterport = "1234";
         String serverAnswer;
         String userChoice;
-        String[] userLine;
+
 
         try {
             // lookup method to find reference of remote object
@@ -149,24 +152,34 @@ public class P2PClient {
             help();
 
             do {
+                System.out.print("Enter your choice: ");
                 System.out.print("$ ");
-                userLine = userScan.nextLine().split(" ");
-                userChoice = userLine[0];
+                userChoice = userScan.nextLine();
 
                 if (userChoice.equals("help")) {
                     help();
-                } else if (userChoice.equals("create") && userLine.length > 1) {
-                    create(userLine[1],masterObj);
-                } else if (userChoice.equals("write") && userLine.length > 1) {
+                } else if (userChoice.equals("create")) {
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    create(fileName,masterObj);
+                } else if (userChoice.equals("write") ) {
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
                     System.out.println("Start Writing....");
                     String data = userScan.nextLine();
-                    write(masterObj,userLine[1], data);
-                } else if (userChoice.equals("read") && userLine.length > 1) {
-                    read(masterObj,userLine[1]);
-                } else if (userChoice.equals("restore") && userLine.length > 1) {
-                    restore(masterObj,userLine[1]);
-                } else if (userChoice.equals("delete") && userLine.length > 1) {
-                    delete(masterObj,userLine[1]);
+                    write(masterObj,fileName, data);
+                } else if (userChoice.equals("read") ) {
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    read(masterObj,fileName);
+                } else if (userChoice.equals("restore")) {
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    restore(masterObj,fileName);
+                } else if (userChoice.equals("delete") ) {
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    delete(masterObj,fileName);
                 } else if (!userChoice.equals("exit")) {
                     System.out.println("Sorry, please enter valid command.");
                 }
