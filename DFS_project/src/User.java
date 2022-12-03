@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.security.*;
 
 public class User implements Serializable {
     private static final long serialVersionUID = -7748296967295940465L;
@@ -6,13 +7,15 @@ public class User implements Serializable {
     String name;
     String ip;
     String port;
-    String userKey;
+    PublicKey publicKey;
+    String eKey;
 
-    User(String name, String ip, String port, String publicKey) {
+    User(String name, String ip, String port, PublicKey publicKey, String eKey) {
         this.name = name;
         this.ip = ip;
         this.port = port;
-        this.userKey = publicKey;
+        this.publicKey = publicKey;
+        this.eKey = eKey;
     }
 
     public String getName() {
@@ -37,6 +40,22 @@ public class User implements Serializable {
 
     public void setPort(String port) {
         this.port = port;
+    }
+
+    public PublicKey getPKey() {
+        return publicKey;
+    }
+
+    public void setPKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getEKey() {
+        return eKey;
+    }
+
+    public void setEKey(String eKey) {
+        this.eKey = eKey;
     }
 
     @Override

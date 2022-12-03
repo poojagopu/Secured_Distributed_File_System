@@ -1,8 +1,13 @@
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.Array;
 import java.util.*;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.*;
 
 @SuppressWarnings("unchecked")
 public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
@@ -51,18 +56,20 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     }
 
     @Override
-    public String registerUser(String userName, String userIP, String userPort, String userPublicKey)
+    public String registerUser(String userName, String userIP, String userPort, PublicKey userPublicKey)
             throws RemoteException {
-        String ans;
-        User newUser = new User(userName, userIP, userPort, userPublicKey);
+        String ans = null;
+        User newUser = new User(userName, userIP, userPort, userPublicKey, null);
         if (allUsers.contains(newUser)) {
-            ans = "User '" + newUser.name + "' already exists";
+            System.out.println("User '" + newUser.name + "' already exists");
             return ans;
         }
+        newUser.setEKey(getSecureRandomKey("AES", 256));
         allUsers.add(newUser);
         updateAllUsers();
-        ans = "Registered new user '" + userName + "'";
+        ans = encryptWithPublicKey(newUser.getEKey(), newUser.getPKey()) + " " + encryption("test", newUser.getEKey());
         System.out.println(ans);
+        System.out.println(newUser.getEKey());
         return ans;
     }
 
@@ -103,5 +110,66 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+    }
+
+    private static String getSecureRandomKey(String cipher, int keySize) {
+        byte[] secureRandomKeyBytes = new byte[keySize / 8];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(secureRandomKeyBytes);
+        return new String(Base64.getEncoder().encode(new SecretKeySpec(secureRandomKeyBytes, cipher).getEncoded()));
+    }
+
+    private static String encryptWithPublicKey(String plain, PublicKey pkey) {
+        try {
+            Cipher encryptCipher = Cipher.getInstance("RSA");
+            encryptCipher.init(Cipher.ENCRYPT_MODE, pkey);
+            byte[] secretMessageBytes = plain.getBytes(StandardCharsets.UTF_8);
+            byte[] encryptedMessageBytes = encryptCipher.doFinal(secretMessageBytes);
+            return Base64.getEncoder().encodeToString(encryptedMessageBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static SecretKeySpec convertKey(final String myKey) {
+        MessageDigest sha = null;
+        byte[] key;
+        try {
+            key = myKey.getBytes(StandardCharsets.UTF_8);
+            sha = MessageDigest.getInstance("SHA-1");
+            key = sha.digest(key);
+            key = Arrays.copyOf(key, 16);
+            return new SecretKeySpec(key, "AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // File encryption
+    public static String encryption(final String strToEncode, final String key) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // (or) AES/GCM/NoPadding
+            cipher.init(Cipher.ENCRYPT_MODE, convertKey(key));
+            return Base64.getEncoder()
+                    .encodeToString(cipher.doFinal(strToEncode.getBytes("UTF-8")));
+        } catch (Exception e) {
+            System.out.println("Something went wrong in encryption: " + e.toString());
+        }
+        return null;
+    }
+
+    // File decryption
+    public static String decryption(final String strToDecode, final String key) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, convertKey(key));
+            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecode)));
+        } catch (Exception e) {
+            System.out.println("Something went wrong in decryption : " + e.toString());
+        }
+        return null;
     }
 }

@@ -2,55 +2,61 @@ import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
+
 @SuppressWarnings("unchecked")
 public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
-    private Map<String, String> users; //username -> userPublicKey
+    private Map<String, String> users; // username -> userPublicKey
     String path;
-    private HashMap<String, Boolean> fileDeletion; //filePath-> isDeleted
+    private HashMap<String, Boolean> fileDeletion; // filePath-> isDeleted
+
     @SuppressWarnings("unchecked")
     RMI_DFS() throws RemoteException, IOException {
         super();
-        fileDeletion=new HashMap<>();
-        path="myFiles/";//for mac users use reverse slash
+        fileDeletion = new HashMap<>();
+        path = "myFiles/"; // for mac users use reverse slash
     }
 
-    public void createDirectory(String dirPath) throws IOException{
-        dirPath=path+dirPath;
+    public void createDirectory(String dirPath) throws IOException {
+        dirPath = path + dirPath;
         File theDir = new File(dirPath);
-        if (!theDir.exists()){
+        if (!theDir.exists()) {
             theDir.mkdirs();
         }
         return;
     }
+
     @Override
     public String createFile(String filePath) throws IOException {
-        filePath=path+filePath;
+        filePath = path + filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
+        System.out.println("here1");
         try {
-        if (fileObject.createNewFile()) {
-            fileDeletion.put(filePath,false);
-            System.out.println("File created: " + fileObject.getName());
-        } else {
-            System.out.println("File already exists.");
-            return "File already exists";
+            if (fileObject.createNewFile()) {
+                System.out.println("here2");
+                fileDeletion.put(filePath, false);
+                System.out.println("File created: " + fileObject.getName());
+            } else {
+                System.out.println("here3");
+                System.out.println("File already exists.");
+                return "File already exists";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
         return "File created successfully.";
     }
 
     @Override
     public String readFile(String filePath) throws IOException {
         String ans;
-        filePath=path+filePath;
+        filePath = path + filePath;
         StringBuilder str = new StringBuilder();
         // Creating an object of BufferedReader class
         try {
-            if(fileDeletion.get(filePath)){
+            if (fileDeletion.get(filePath)) {
                 return null;
-            }else{
+            } else {
                 BufferedReader br = new BufferedReader(new FileReader(filePath));
                 while ((ans = br.readLine()) != null)
                     str.append(ans);
@@ -65,14 +71,13 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         return str.toString();
     }
 
-
     @Override
     public String writeFile(String FilePath, String data) throws RemoteException {
         try {
-            FilePath=path+FilePath;
-            if(fileDeletion.get(FilePath)){
+            FilePath = path + FilePath;
+            if (fileDeletion.get(FilePath)) {
                 return null;
-            }else{
+            } else {
                 FileWriter fw = new FileWriter(FilePath);
                 BufferedWriter bw = new BufferedWriter(fw);
                 System.out.println("Started writing");
@@ -89,26 +94,24 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         }
     }
 
-
     @Override
-
     public String restoreFiles(String filePath) throws RemoteException {
-        filePath=path+filePath;
-        if(!fileDeletion.get(filePath)){
-           return null;
-        }else{
-            fileDeletion.put(filePath,false);
+        filePath = path + filePath;
+        if (!fileDeletion.get(filePath)) {
+            return null;
+        } else {
+            fileDeletion.put(filePath, false);
             return "File restored successfully";
         }
     }
 
     @Override
     public String deleteFile(String filePath) throws RemoteException {
-        filePath=path+filePath;
-        if(fileDeletion.get(filePath)){
+        filePath = path + filePath;
+        if (fileDeletion.get(filePath)) {
             return null;
-        }else{
-            fileDeletion.put(filePath,true);
+        } else {
+            fileDeletion.put(filePath, true);
             return "File Deleted Successfully";
         }
 
