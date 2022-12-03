@@ -7,6 +7,7 @@ import java.security.*;
 import java.security.spec.*;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -63,12 +64,30 @@ public class P2PServer {
             // implementation class
             String encryptionKey = masterObj.registerUser(userName, userIP, userPort, publicKey);
             if (encryptionKey != null) {
-                for (String s : encryptionKey.split("\\s+"))
-                    System.out.println(s);
-
-                System.out.println(decryption(encryptionKey.split("\\s+")[1], decryptWithPublicKey(encryptionKey.split("\\s+")[0], privateKey)));
+                // Save in key file
+                BufferedWriter writer = new BufferedWriter(new FileWriter("secret+" + userName + ".key"));
+                writer.write(decryptWithPrivateKey(encryptionKey, privateKey));
+                writer.close();
             } else {
-                System.out.println("User already registered");
+                System.out.println("User already registered, looking for saved encryption key");
+                try {
+                    File myObj = new File("secret+" + userName + ".key");
+                    if (myObj.exists()) {
+                        Scanner myReader = new Scanner(myObj);
+                        if (myReader.hasNextLine()) {
+                            encryptionKey = myReader.nextLine();
+                            System.out.println("Located: " + encryptionKey);
+                        } else {
+                            System.out.println("Unable to find encryption key");
+                        }
+                        myReader.close();
+                    } else {
+                        System.out.println("Unable to find encryption key");
+                    }
+                } catch (FileNotFoundException e) {
+                    System.out.println("An error occurred.");
+                    e.printStackTrace();
+                }
             }
             RMIFileSystem interface_obj = new RMI_DFS();
 
@@ -84,7 +103,7 @@ public class P2PServer {
         }
     }
 
-    private static String decryptWithPublicKey(String crypt, PrivateKey pkey) {
+    private static String decryptWithPrivateKey(String crypt, PrivateKey pkey) {
         try {
             Cipher decryptCipher = Cipher.getInstance("RSA");
             decryptCipher.init(Cipher.DECRYPT_MODE, pkey);

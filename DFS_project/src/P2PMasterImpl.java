@@ -67,8 +67,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         newUser.setEKey(getSecureRandomKey("AES", 256));
         allUsers.add(newUser);
         updateAllUsers();
-        ans = encryptWithPublicKey(newUser.getEKey(), newUser.getPKey()) + " " + encryption("test", newUser.getEKey());
-        System.out.println(ans);
+        ans = encryptWithPublicKey(newUser.getEKey(), newUser.getPKey());
         System.out.println(newUser.getEKey());
         return ans;
     }
