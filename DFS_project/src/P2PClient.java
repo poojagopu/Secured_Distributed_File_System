@@ -13,7 +13,7 @@ public class P2PClient {
     private static SecretKeySpec secretKeySpec;
     private static byte[] key;
 
-    public String myIP="192.168.56.1";
+    public String myIP="localhost";
     public String myPort="9876";
     // Key setter
     public static void setKey(final String myKey) {
@@ -60,20 +60,21 @@ public class P2PClient {
         try{
 
             User user = masterObj.getRandomPeer();
-           // System.out.println("Entering create");
+            System.out.println("Entering create");
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-          //  System.out.println("Entering create second");
+            System.out.println("Entering create second");
             String response = peer.createFile(encryption(filePath,user.userKey));
-          //  System.out.println("File created successfully.");
+            System.out.println("File created successfully.");
             if(response!=null){
                 masterObj.updateHashTable(filePath, user);
                 List<User> userInfo = masterObj.getPeerInfo(response);
-                //System.out.println(userInfo);
+                System.out.println(userInfo);
             }
             System.out.println(response);
         }
         catch(Exception e){
             System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -164,7 +165,7 @@ public class P2PClient {
 
 
     public static void main(String args[]) {
-        String masterIP = "192.168.56.1";
+        String masterIP = "localhost";
         String masterport = "1234";
         String serverAnswer;
         String userChoice;

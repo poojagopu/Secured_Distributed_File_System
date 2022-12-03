@@ -27,6 +27,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         filePath=path+filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
+        try {
         if (fileObject.createNewFile()) {
             fileDeletion.put(filePath,false);
             System.out.println("File created: " + fileObject.getName());
@@ -34,6 +35,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             System.out.println("File already exists.");
             return "File already exists";
         }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
         return "File created successfully.";
     }
 
