@@ -12,7 +12,7 @@ import java.security.*;
 public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     public HashMap<String, List<User>> fileUsers;
     public Set<User> allUsers; // username -> userPublicKey
-    public HashMap<String, String> groups; // groupName -> owner
+    public Set<Group> groups;
 
     protected P2PMasterImpl() throws IOException {
         super();
@@ -44,6 +44,32 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             allUsers = new HashSet<>();
         }
         System.out.println("Loaded configuration file " + allUsersDB.getPath());
+
+        // Set up config file for storing groups
+        File groupsDB = new File("configurations/groups");
+        groupsDB.getParentFile().mkdirs();
+        if (groupsDB.createNewFile())
+            System.out.println("Created configuration file " + groupsDB.getPath());
+        if (groupsDB.length() != 0) {
+            try {
+                FileInputStream fis = new FileInputStream(groupsDB.getPath());
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                groups = (HashSet<Group>) ois.readObject();
+                fis.close();
+                ois.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Clasrs not found.");
+                e.printStackTrace();
+                return;
+            }
+        } else {
+            groups = new HashSet<>();
+        }
+        System.out.println("Loaded configuration file " + groupsDB.getPath());
     }
 
     @Override
@@ -84,12 +110,25 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             }
             if (userInCharge != null) {
                 if (checkSignature((currentUserName + userToAddName + group), challenge, userInCharge.getPKey())) {
-                    System.out.println("here1");
                     for (User userInProgress : allUsers) {
                         if (userInProgress.equals(userToAdd)) {
-                            System.out.println("here2");
-                            userInProgress.addGroup(group);
-                            updateAllUsers();
+                            Group groupTmp = new Group(group, currentUserName, getSecureRandomKey("AES", 256));
+                            if (!groups.contains(groupTmp)) {
+                                groups.add(groupTmp);
+                                userInProgress.addGroup(group);
+                                updateAllUsers();
+                                updateGroups();
+                            } else {
+                                for (Group existingGroup : groups) {
+                                    if (existingGroup.equals(groupTmp)
+                                            && existingGroup.getOwner().equals(currentUserName)) {
+                                        groups.add(groupTmp);
+                                        userInProgress.addGroup(group);
+                                        updateAllUsers();
+                                        updateGroups();
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -130,6 +169,19 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             FileOutputStream myFileOutStream = new FileOutputStream("configurations/allUsers");
             ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
             myObjectOutStream.writeObject(allUsers);
+            myObjectOutStream.close();
+            myFileOutStream.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
+    private void updateGroups() {
+        try {
+            FileOutputStream myFileOutStream = new FileOutputStream("configurations/groups");
+            ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
+            myObjectOutStream.writeObject(groups);
             myObjectOutStream.close();
             myFileOutStream.close();
         } catch (IOException e) {
