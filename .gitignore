@@ -3,3 +3,5 @@
 */myFiles/*
 # server configurations
 **/configurations/**
+# keys
+*.key
