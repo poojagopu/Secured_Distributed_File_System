@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.Comparator;
 
-public class User {
+public class User implements Serializable {
     String ip;
     String port;
 

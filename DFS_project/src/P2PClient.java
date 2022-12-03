@@ -60,11 +60,11 @@ public class P2PClient {
         try{
 
             User user = masterObj.getRandomPeer();
-            System.out.println("Entering create");
+           // System.out.println("Entering create");
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-            System.out.println("Entering create second");
+          //  System.out.println("Entering create second");
             String response = peer.createFile(filePath);
-            System.out.println("File created successfully.");
+          //  System.out.println("File created successfully.");
             if(response!=null){
                 masterObj.updateHashTable(filePath, user);
                 List<User> userInfo = masterObj.getPeerInfo(response);

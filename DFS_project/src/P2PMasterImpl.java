@@ -90,6 +90,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             users=new ArrayList<>();
             users.add(user);
         }
+        fileUsers.put(filePath,users);
     }
 
     private void updateUsers() {
