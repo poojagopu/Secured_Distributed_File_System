@@ -5,15 +5,26 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     private Map<String, String> users; //username -> userPublicKey
+    String path;
     private HashMap<String, Boolean> fileDeletion; //filePath-> isDeleted
     @SuppressWarnings("unchecked")
     RMI_DFS() throws RemoteException, IOException {
         super();
         fileDeletion=new HashMap<>();
+        path="myFiles/";//for mac users use reverse slash
     }
 
+    public void createDirectory(String dirPath) throws IOException{
+        dirPath=path+dirPath;
+        File theDir = new File(dirPath);
+        if (!theDir.exists()){
+            theDir.mkdirs();
+        }
+        return;
+    }
     @Override
     public String createFile(String filePath) throws IOException {
+        filePath=path+filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
         if (fileObject.createNewFile()) {
@@ -29,11 +40,12 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     @Override
     public String readFile(String filePath) throws IOException {
         String ans;
+        filePath=path+filePath;
         StringBuilder str = new StringBuilder();
         // Creating an object of BufferedReader class
         try {
             if(fileDeletion.get(filePath)){
-                return "Can't read file as it is deleted";
+                return null;
             }else{
                 BufferedReader br = new BufferedReader(new FileReader(filePath));
                 while ((ans = br.readLine()) != null)
@@ -53,8 +65,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     @Override
     public String writeFile(String FilePath, String data) throws RemoteException {
         try {
+            FilePath=path+FilePath;
             if(fileDeletion.get(FilePath)){
-                return "Can't write into file as it is deleted";
+                return null;
             }else{
                 FileWriter fw = new FileWriter(FilePath);
                 BufferedWriter bw = new BufferedWriter(fw);
@@ -76,8 +89,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     @Override
 
     public String restoreFiles(String filePath) throws RemoteException {
+        filePath=path+filePath;
         if(!fileDeletion.get(filePath)){
-           return "File can't be restored as file is not deleted";
+           return null;
         }else{
             fileDeletion.put(filePath,false);
             return "File restored successfully";
@@ -86,8 +100,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String deleteFile(String filePath) throws RemoteException {
+        filePath=path+filePath;
         if(fileDeletion.get(filePath)){
-            return "File already Deleted";
+            return null;
         }else{
             fileDeletion.put(filePath,true);
             return "File Deleted Successfully";

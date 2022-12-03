@@ -63,7 +63,7 @@ public class P2PClient {
            // System.out.println("Entering create");
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
           //  System.out.println("Entering create second");
-            String response = peer.createFile(filePath);
+            String response = peer.createFile(encryption(filePath,user.userKey));
           //  System.out.println("File created successfully.");
             if(response!=null){
                 masterObj.updateHashTable(filePath, user);
@@ -77,16 +77,33 @@ public class P2PClient {
         }
     }
 
+    public static void createDirectory(String dirName, P2PMaster masterObj){
+        try{
+
+            User user = masterObj.getRandomPeer();
+            // System.out.println("Entering create");
+            RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
+            //  System.out.println("Entering create second");
+            peer.createDirectory(encryption(dirName,user.userKey));
+            System.out.println("Directory created successfully.");
+        }
+        catch(Exception e){
+            System.out.println("Directory not created :(");
+            System.out.println(e);
+        }
+    }
+
     public static void read(P2PMaster masterObj, String filePath){
         try{
             List<User> users = masterObj.getPeerInfo(filePath);
             User user=users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-            String fileData = peer.readFile(filePath);
+            String fileData = peer.readFile(encryption(filePath,user.userKey));
             if(fileData==null){
                 System.out.println("Failed to read file......");
+                return;
             }
-            System.out.println("File Data : "+ fileData);
+            System.out.println("File Data : "+ decryption(fileData, user.userKey));
         }
         catch(Exception e){
             System.out.println(e);
@@ -98,9 +115,12 @@ public class P2PClient {
             List<User> users = masterObj.getPeerInfo(filePath);
             User user=users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-            String fileData = peer.writeFile(filePath,data);
+            String fileData = peer.writeFile(encryption(filePath,user.userKey),encryption(data, user.userKey));
+            if(fileData==null){
+                System.out.println("Failed to write file......");
+                return;
+            }
             System.out.println("Successfully written in the file");
-            return ;
         }
         catch(Exception e){
             System.out.println(e);
@@ -112,9 +132,12 @@ public class P2PClient {
             List<User> users = masterObj.getPeerInfo(filePath);
             User user=users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-            String response = peer.deleteFile(filePath);
+            String response = peer.deleteFile(encryption(filePath,user.userKey));
+            if(response==null){
+                System.out.println("Failed to delete file......");
+                return;
+            }
             System.out.println(response);
-            return;
         }
         catch(Exception e){
             System.out.println(e);
@@ -126,9 +149,12 @@ public class P2PClient {
             List<User> users = masterObj.getPeerInfo(filePath);
             User user=users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://"+user.ip+":"+user.port+"/master");
-            String response = peer.restoreFiles(filePath);
+            String response = peer.restoreFiles(encryption(filePath,user.userKey));
+            if(response==null){
+                System.out.println("Failed to restore file......");
+                return;
+            }
             System.out.println(response);
-            return;
         }
         catch(Exception e){
             System.out.println(e);
@@ -162,6 +188,10 @@ public class P2PClient {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();
                     create(fileName,masterObj);
+                } else if (userChoice.equals("createDirectory")) {
+                    System.out.println("Enter directory name: ");
+                    String dirName = userScan.nextLine();
+                    createDirectory(dirName,masterObj);
                 } else if (userChoice.equals("write") ) {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();

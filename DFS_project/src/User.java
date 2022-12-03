@@ -5,12 +5,13 @@ public class User implements Serializable {
     String ip;
     String port;
 
-    String publicKey;
+    String userKey;
     User(String ip, String port, String publicKey){
         this.ip=ip;
         this.port=port;
-        this.publicKey=publicKey;
+        this.userKey =publicKey;
     }
+
 
     class UserComparator implements Comparator<User> {
 

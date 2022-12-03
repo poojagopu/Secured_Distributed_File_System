@@ -7,13 +7,13 @@ public class P2PServer {
         String masterPort="1234";
         String userIP="192.168.56.1";
         String userPort="5678";
-        String userPublicKey="abcd";
+        String userKey="abcd";
         try {
 
             P2PMaster masterObj= (P2PMaster) Naming.lookup("rmi://"+masterIP+":"+masterPort+"/master");
             // Create an object of the interface
             // implementation class
-            String response = masterObj.registerUser(userIP, userPort, userPublicKey);
+            String response = masterObj.registerUser(userIP, userPort, userKey);
             if(response!=null){
                System.out.println(response);
             }else{

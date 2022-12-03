@@ -5,6 +5,7 @@ public interface RMIFileSystem extends Remote {
     // Declaring the method prototypes
 
     public String createFile(String fileName) throws IOException;
+    public void createDirectory(String fileName) throws IOException;
 
     public String readFile(String fileName) throws IOException;
 
