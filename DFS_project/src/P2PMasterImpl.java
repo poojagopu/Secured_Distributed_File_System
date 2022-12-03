@@ -10,14 +10,15 @@ import java.security.*;
 
 @SuppressWarnings("unchecked")
 public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
-    public HashMap<String, List<User>> fileUsers;
+    public HashMap<String, P2PFile> filesystem;
     public Set<User> allUsers; // username -> userPublicKey
     public Set<Group> groups;
 
     protected P2PMasterImpl() throws IOException {
         super();
         allUsers = new HashSet<>();
-        fileUsers = new HashMap<>();
+        groups = new HashSet<>();
+        filesystem = new HashMap<>();
 
         // Set up config file for storing authorized users
         File allUsersDB = new File("configurations/allUsers");
@@ -40,8 +41,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 e.printStackTrace();
                 return;
             }
-        } else {
-            allUsers = new HashSet<>();
         }
         System.out.println("Loaded configuration file " + allUsersDB.getPath());
 
@@ -66,16 +65,40 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 e.printStackTrace();
                 return;
             }
-        } else {
-            groups = new HashSet<>();
         }
         System.out.println("Loaded configuration file " + groupsDB.getPath());
+
+        // Set up config file for filesystem
+        File filesystemDB = new File("configurations/filesystem");
+        filesystemDB.getParentFile().mkdirs();
+        if (filesystemDB.createNewFile())
+            System.out.println("Created configuration file " + filesystemDB.getPath());
+        if (filesystemDB.length() != 0) {
+            try {
+                FileInputStream fis = new FileInputStream(filesystemDB.getPath());
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                filesystem = (HashMap<String, P2PFile>) ois.readObject();
+                fis.close();
+                ois.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Class not found.");
+                e.printStackTrace();
+                return;
+            }
+        }
+        System.out.println("Loaded configuration file " + filesystemDB.getPath());
     }
 
     @Override
     public List<User> getPeerInfo(String filePath) throws RemoteException {
-        if (fileUsers.containsKey(filePath)) {
-            return fileUsers.get(filePath);
+        if (filesystem.containsKey(filePath)) {
+            return filesystem.get(filePath).getLocations();
+        } else {
+            System.out.println("no such file path " + filePath);
         }
         return null;
     }
@@ -177,28 +200,31 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
     @Override
     public User getRandomPeer() throws RemoteException {
-        System.out.println("Users we have:");
-        System.out.println(allUsers);
         User[] userArray = allUsers.toArray(new User[allUsers.size()]);
         // generate a random number
         Random random = new Random();
         // this will generate a random number between 0 and
         // HashSet.size - 1
         int randomNumber = random.nextInt(allUsers.size());
-        return userArray[randomNumber];
+        User selectedUser = userArray[randomNumber];
+        User strippedUser = new User(selectedUser.getName(), selectedUser.getIp(), selectedUser.getPort(),
+                selectedUser.getPKey(), null);
+        return strippedUser;
     }
 
     @Override
     public void updateHashTable(String filePath, User user) {
         List<User> users;
-        if (fileUsers.containsKey(filePath)) {
-            users = fileUsers.get(filePath);
+        if (filesystem.containsKey(filePath)) {
+            users = filesystem.get(filePath).getLocations();
             users.add(user);
         } else {
             users = new ArrayList<>();
             users.add(user);
         }
-        fileUsers.put(filePath, users);
+        filesystem.put(filePath, new P2PFile(filePath, null, null, users));
+        System.out.println("users in " + filePath + " " + users);
+        updateFilesystem();
     }
 
     private void updateAllUsers() {
@@ -219,6 +245,19 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             FileOutputStream myFileOutStream = new FileOutputStream("configurations/groups");
             ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
             myObjectOutStream.writeObject(groups);
+            myObjectOutStream.close();
+            myFileOutStream.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
+    private void updateFilesystem() {
+        try {
+            FileOutputStream myFileOutStream = new FileOutputStream("configurations/filesystem");
+            ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
+            myObjectOutStream.writeObject(filesystem);
             myObjectOutStream.close();
             myFileOutStream.close();
         } catch (IOException e) {

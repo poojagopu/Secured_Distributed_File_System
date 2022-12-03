@@ -88,7 +88,7 @@ public class P2PServer {
                     e.printStackTrace();
                 }
             }
-            RMIFileSystem interface_obj = new RMI_DFS();
+            RMIFileSystem interface_obj = new RMI_DFS(userName);
 
             // rmiregistry within the server JVM with
             // port number 1234

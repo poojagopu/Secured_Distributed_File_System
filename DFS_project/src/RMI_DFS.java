@@ -7,18 +7,45 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     // private Map<String, String> users; // username -> userPublicKey
     String path;
     private HashMap<String, Boolean> fileDeletion; // filePath-> isDeleted
+    String username;
 
-    RMI_DFS() throws RemoteException, IOException {
+    @SuppressWarnings("unchecked")
+    RMI_DFS(String username) throws RemoteException, IOException {
         super();
         fileDeletion = new HashMap<>();
         path = "myFiles";
+        this.username = username;
+
+        // Set up config file for deletedFiles
+        File deletedFilesDB = new File(username + "+configurations/deletedFiles");
+        deletedFilesDB.getParentFile().mkdirs();
+        if (deletedFilesDB.createNewFile())
+            System.out.println("Created configuration file " + deletedFilesDB.getPath());
+        if (deletedFilesDB.length() != 0) {
+            try {
+                FileInputStream fis = new FileInputStream(deletedFilesDB.getPath());
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                fileDeletion = (HashMap<String, Boolean>) ois.readObject();
+                fis.close();
+                ois.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Class not found.");
+                e.printStackTrace();
+                return;
+            }
+        }
+        System.out.println("Loaded configuration file " + deletedFilesDB.getPath());
     }
 
-    public void createDirectory(String dirPath) throws IOException {
+    public String createDirectory(String dirPath) throws IOException {
         dirPath = path + dirPath;
         File theDir = new File(dirPath);
         theDir.mkdirs();
-        return;
+        return "Directory created successfully.";
     }
 
     @Override
@@ -27,14 +54,12 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
         fileObject.getParentFile().mkdirs();
-        System.out.println("here1");
         try {
             if (fileObject.createNewFile()) {
-                System.out.println("here2");
                 fileDeletion.put(filePath, false);
+                updateDeletedFiles();
                 System.out.println("File created: " + fileObject.getName());
             } else {
-                System.out.println("here3");
                 System.out.println("File already exists.");
                 return "File already exists";
             }
@@ -60,7 +85,6 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                 System.out.println("Read successfully");
                 br.close();
             }
-
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
@@ -70,8 +94,8 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String writeFile(String FilePath, String data) throws RemoteException {
+        FilePath = path + FilePath;
         try {
-            FilePath = path + FilePath;
             if (fileDeletion.get(FilePath)) {
                 return null;
             } else {
@@ -83,7 +107,6 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                 System.out.println("Written successfully");
                 return "Written successfully";
             }
-
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
@@ -98,6 +121,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             return null;
         } else {
             fileDeletion.put(filePath, false);
+            updateDeletedFiles();
             return "File restored successfully";
         }
     }
@@ -109,7 +133,21 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             return null;
         } else {
             fileDeletion.put(filePath, true);
+            updateDeletedFiles();
             return "File Deleted Successfully";
+        }
+    }
+
+    private void updateDeletedFiles() {
+        try {
+            FileOutputStream myFileOutStream = new FileOutputStream(username + "+configurations/deletedFiles");
+            ObjectOutputStream myObjectOutStream = new ObjectOutputStream(myFileOutStream);
+            myObjectOutStream.writeObject(fileDeletion);
+            myObjectOutStream.close();
+            myFileOutStream.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
         }
     }
 }
