@@ -115,7 +115,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         byte[] secureRandomKeyBytes = new byte[keySize / 8];
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(secureRandomKeyBytes);
-        return new String(Base64.getEncoder().encode(new SecretKeySpec(secureRandomKeyBytes, cipher).getEncoded()));
+        return new String(Base64.getUrlEncoder().encode(new SecretKeySpec(secureRandomKeyBytes, cipher).getEncoded()));
     }
 
     private static String encryptWithPublicKey(String plain, PublicKey pkey) {
@@ -124,7 +124,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             encryptCipher.init(Cipher.ENCRYPT_MODE, pkey);
             byte[] secretMessageBytes = plain.getBytes(StandardCharsets.UTF_8);
             byte[] encryptedMessageBytes = encryptCipher.doFinal(secretMessageBytes);
-            return Base64.getEncoder().encodeToString(encryptedMessageBytes);
+            return Base64.getUrlEncoder().encodeToString(encryptedMessageBytes);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -152,7 +152,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // (or) AES/GCM/NoPadding
             cipher.init(Cipher.ENCRYPT_MODE, convertKey(key));
-            return Base64.getEncoder()
+            return Base64.getUrlEncoder()
                     .encodeToString(cipher.doFinal(strToEncode.getBytes("UTF-8")));
         } catch (Exception e) {
             System.out.println("Something went wrong in encryption: " + e.toString());
@@ -165,7 +165,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, convertKey(key));
-            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecode)));
+            return new String(cipher.doFinal(Base64.getUrlDecoder().decode(strToDecode)));
         } catch (Exception e) {
             System.out.println("Something went wrong in decryption : " + e.toString());
         }

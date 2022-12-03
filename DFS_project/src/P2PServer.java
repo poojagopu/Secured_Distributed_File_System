@@ -76,7 +76,7 @@ public class P2PServer {
                         Scanner myReader = new Scanner(myObj);
                         if (myReader.hasNextLine()) {
                             encryptionKey = myReader.nextLine();
-                            System.out.println("Located: " + encryptionKey);
+                            System.out.println("Located encryption key");
                         } else {
                             System.out.println("Unable to find encryption key");
                         }
@@ -107,7 +107,7 @@ public class P2PServer {
         try {
             Cipher decryptCipher = Cipher.getInstance("RSA");
             decryptCipher.init(Cipher.DECRYPT_MODE, pkey);
-            byte[] encryptedMessageBytes = Base64.getDecoder().decode(crypt);
+            byte[] encryptedMessageBytes = Base64.getUrlDecoder().decode(crypt);
             byte[] decryptedMessageBytes = decryptCipher.doFinal(encryptedMessageBytes);
             String decryptedMessage = new String(decryptedMessageBytes, StandardCharsets.UTF_8);
             return decryptedMessage;
@@ -151,7 +151,7 @@ public class P2PServer {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, convertKey(key));
-            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecode)));
+            return new String(cipher.doFinal(Base64.getUrlDecoder().decode(strToDecode)));
         } catch (Exception e) {
             System.out.println("Something went wrong in decryption : " + e.toString());
         }

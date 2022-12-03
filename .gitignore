@@ -1,7 +1,8 @@
 # compiled class files
 *.class
-*/myFiles/*
 # server configurations
 **/configurations/**
 # keys
 *.key
+# encrypted files
+**/myFiles/**

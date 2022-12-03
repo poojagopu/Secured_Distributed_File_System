@@ -19,9 +19,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     public void createDirectory(String dirPath) throws IOException {
         dirPath = path + dirPath;
         File theDir = new File(dirPath);
-        if (!theDir.exists()) {
-            theDir.mkdirs();
-        }
+        theDir.mkdirs();
         return;
     }
 
@@ -30,6 +28,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         filePath = path + filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
+        fileObject.getParentFile().mkdirs();
         System.out.println("here1");
         try {
             if (fileObject.createNewFile()) {
