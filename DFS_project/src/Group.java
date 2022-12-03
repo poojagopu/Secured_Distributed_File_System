@@ -43,7 +43,7 @@ public class Group implements Serializable {
             return false;
         if (getClass() != o.getClass())
             return false;
-        User u = (User) o;
+        Group u = (Group) o;
         return this.name.equals(u.name);
     }
 
