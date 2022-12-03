@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.security.*;
+import java.util.*;
 
 public class User implements Serializable {
     private static final long serialVersionUID = -7748296967295940465L;
@@ -9,6 +10,7 @@ public class User implements Serializable {
     String port;
     PublicKey publicKey;
     String eKey;
+    List<String> groups;
 
     User(String name, String ip, String port, PublicKey publicKey, String eKey) {
         this.name = name;
@@ -16,6 +18,7 @@ public class User implements Serializable {
         this.port = port;
         this.publicKey = publicKey;
         this.eKey = eKey;
+        this.groups = new ArrayList<>();
     }
 
     public String getName() {
@@ -56,6 +59,14 @@ public class User implements Serializable {
 
     public void setEKey(String eKey) {
         this.eKey = eKey;
+    }
+
+    public List<String> getGroups() {
+        return groups;
+    }
+
+    public void addGroup(String group) {
+        this.groups.add(group);
     }
 
     @Override

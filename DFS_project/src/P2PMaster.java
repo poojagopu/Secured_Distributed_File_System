@@ -12,6 +12,7 @@ public interface P2PMaster extends Remote {
     // returns a random peer to create a file
     public User getRandomPeer() throws RemoteException;
 
+    public String addUserToGroup(String currentUser, String userToAdd, String group, String challenge) throws RemoteException;
 
     public void updateHashTable(String filePath, User user) throws RemoteException;
 }

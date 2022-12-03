@@ -10,9 +10,9 @@ import java.security.*;
 
 @SuppressWarnings("unchecked")
 public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
-
     public HashMap<String, List<User>> fileUsers;
     public Set<User> allUsers; // username -> userPublicKey
+    public HashMap<String, String> groups; // groupName -> owner
 
     protected P2PMasterImpl() throws IOException {
         super();
@@ -67,8 +67,36 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         allUsers.add(newUser);
         updateAllUsers();
         ans = encryptWithPublicKey(newUser.getEKey(), newUser.getPKey());
-        System.out.println(newUser.getEKey());
         return ans;
+    }
+
+    @Override
+    public String addUserToGroup(String currentUserName, String userToAddName, String group, String challenge)
+            throws RemoteException {
+        User currentUser = new User(currentUserName, null, null, null, null);
+        User userToAdd = new User(userToAddName, null, null, null, null);
+        if (allUsers.contains(currentUser) && allUsers.contains(userToAdd) && !currentUserName.equals(userToAddName)) {
+            User userInCharge = null;
+            for (User u : allUsers) {
+                if (u.equals(currentUser)) {
+                    userInCharge = u;
+                }
+            }
+            if (userInCharge != null) {
+                if (checkSignature((currentUserName + userToAddName + group), challenge, userInCharge.getPKey())) {
+                    System.out.println("here1");
+                    for (User userInProgress : allUsers) {
+                        if (userInProgress.equals(userToAdd)) {
+                            System.out.println("here2");
+                            userInProgress.addGroup(group);
+                            updateAllUsers();
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -129,6 +157,19 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         }
 
         return null;
+    }
+
+    private static boolean checkSignature(String message, String signature, PublicKey pkey) {
+        try {
+            Signature sig = Signature.getInstance("SHA1WithRSA");
+            sig.initVerify(pkey);
+            sig.update(message.getBytes("UTF8"));
+            return sig.verify(Base64.getUrlDecoder().decode(signature));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     public static SecretKeySpec convertKey(final String myKey) {

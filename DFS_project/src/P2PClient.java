@@ -1,9 +1,14 @@
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.rmi.*;
 import java.util.*;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -57,6 +62,26 @@ public class P2PClient {
         } catch (Exception e) {
             System.out.println("Something went wrong in decryption : " + e.toString());
         }
+        return null;
+    }
+
+    private static String signWithPrivateKey(String msg) {
+        try {
+            File privateKeyFile = new File("private+" + myUserName + ".key");
+            byte[] privateKeyBytes = Files.readAllBytes(privateKeyFile.toPath());
+            KeyFactory keyFactory2 = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+            PrivateKey privateKey = keyFactory2.generatePrivate(privateKeySpec);
+
+            Signature sig = Signature.getInstance("SHA1WithRSA");
+            sig.initSign(privateKey);
+            sig.update(msg.getBytes("UTF8"));
+            byte[] signatureBytes = sig.sign();
+            return Base64.getUrlEncoder().encodeToString(signatureBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 
@@ -181,6 +206,8 @@ public class P2PClient {
 
             // lookup method to find reference of remote object
             P2PMaster masterObj = (P2PMaster) Naming.lookup("rmi://" + masterIP + ":" + masterport + "/master");
+            masterObj.addUserToGroup(myUserName, "bill", "group1",
+                    signWithPrivateKey(myUserName + "bill" + "group1"));
 
             Scanner userScan = new Scanner(System.in);
             help();
