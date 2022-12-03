@@ -62,7 +62,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 e.printStackTrace();
                 return;
             } catch (ClassNotFoundException e) {
-                System.out.println("Clasrs not found.");
+                System.out.println("Class not found.");
                 e.printStackTrace();
                 return;
             }

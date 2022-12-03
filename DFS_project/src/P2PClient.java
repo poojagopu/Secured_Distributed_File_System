@@ -91,7 +91,11 @@ public class P2PClient {
             System.out.println("Entering create");
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
             System.out.println("Entering create second");
-            String response = peer.createFile(encryption(filePath, encryptionKey));
+            String encryptedFilePath = "";
+            for (String part : filePath.split("/")) {
+                encryptedFilePath += "/" + encryption(part, encryptionKey);
+            }
+            String response = peer.createFile(encryptedFilePath);
             System.out.println("response: " + response);
             if (response != null) {
                 masterObj.updateHashTable(filePath, user);

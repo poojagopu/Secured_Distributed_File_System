@@ -11,7 +11,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     RMI_DFS() throws RemoteException, IOException {
         super();
         fileDeletion = new HashMap<>();
-        path = "myFiles/"; // for mac users use reverse slash
+        path = "myFiles";
     }
 
     public void createDirectory(String dirPath) throws IOException {
