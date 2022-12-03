@@ -139,6 +139,43 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     }
 
     @Override
+    public String removeUserFromGroup(String currentUserName, String userToRemoveName, String group, String challenge)
+            throws RemoteException {
+        User currentUser = new User(currentUserName, null, null, null, null);
+        User userToRemove = new User(userToRemoveName, null, null, null, null);
+        if (allUsers.contains(currentUser) && allUsers.contains(userToRemove)
+                && !currentUserName.equals(userToRemoveName)) {
+            User userInCharge = null;
+            for (User u : allUsers) {
+                if (u.equals(currentUser)) {
+                    userInCharge = u;
+                }
+            }
+            if (userInCharge != null) {
+                if (checkSignature((currentUserName + userToRemoveName + group), challenge, userInCharge.getPKey())) {
+                    for (User userInProgress : allUsers) {
+                        if (userInProgress.equals(userToRemove)) {
+                            Group groupTmp = new Group(group, null, null);
+                            if (groups.contains(groupTmp)) {
+                                for (Group existingGroup : groups) {
+                                    if (existingGroup.equals(groupTmp)
+                                            && existingGroup.getOwner().equals(currentUserName)) {
+                                        userInProgress.removeGroup(group);
+                                        updateAllUsers();
+                                        updateGroups();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public User getRandomPeer() throws RemoteException {
         System.out.println("Users we have:");
         System.out.println(allUsers);

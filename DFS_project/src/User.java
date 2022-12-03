@@ -5,12 +5,12 @@ import java.util.*;
 public class User implements Serializable {
     private static final long serialVersionUID = -7748296967295940465L;
 
-    String name;
-    String ip;
-    String port;
-    PublicKey publicKey;
-    String eKey;
-    List<String> groups;
+    public String name;
+    public String ip;
+    public String port;
+    public PublicKey publicKey;
+    private String eKey;
+    private List<String> groups;
 
     User(String name, String ip, String port, PublicKey publicKey, String eKey) {
         this.name = name;
@@ -67,6 +67,10 @@ public class User implements Serializable {
 
     public void addGroup(String group) {
         this.groups.add(group);
+    }
+
+    public void removeGroup(String group) {
+        this.groups.remove(group);
     }
 
     @Override
