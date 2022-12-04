@@ -97,7 +97,7 @@ public class P2PClient {
             String response = peer.createFile(encryptedFilePath);
             System.out.println("response: " + response);
             if (response != null) {
-                masterObj.updateHashTable(encryptedFilePath, user);
+                masterObj.updateHashTable(encryptedFilePath, user, myUserName);
                 List<User> userInfo = masterObj.getPeerInfo(encryptedFilePath);
                 System.out.println(userInfo);
             }
@@ -118,7 +118,7 @@ public class P2PClient {
             }
             String ans = peer.createDirectory(encryptedFilePath);
             if (ans != null) {
-                masterObj.updateHashTable(encryptedFilePath, user);
+                masterObj.updateHashTable(encryptedFilePath, user, myUserName);
             }
             System.out.println("Directory created successfully.");
         } catch (Exception e) {

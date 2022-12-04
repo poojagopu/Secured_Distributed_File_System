@@ -1,21 +1,22 @@
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class P2PFile implements Serializable {
     private String name;
     private String owner;
-    private List<String> groups;
+    private Set<String> groups;
     private List<User> locations;
 
     P2PFile(String name, String owner, List<User> locations) {
         this.name = name;
         this.owner = owner;
-        this.groups = new ArrayList<>();
+        this.groups = new HashSet<>();
         this.locations = locations;
     }
 
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         return groups;
     }
 
@@ -31,13 +32,18 @@ public class P2PFile implements Serializable {
         return owner;
     }
 
-    public void setGroups(List<String> groups) {
+    public void setGroups(Set<String> groups) {
         this.groups = groups;
     }
 
     public void addGroup(String group) {
         System.out.println(this.groups);
         this.groups.add(group);
+    }
+
+    public void removeGroup(String group) {
+        System.out.println(this.groups);
+        this.groups.remove(group);
     }
 
     public void setLocations(List<User> locations) {

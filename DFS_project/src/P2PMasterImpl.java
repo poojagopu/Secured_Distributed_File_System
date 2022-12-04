@@ -180,7 +180,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 }
             }
             if (userInCharge != null) {
-                if (checkSignature((currentUserName + userToRemoveName + group), challenge, userInCharge.getPKey())) {
+                if (checkSignature((currentUserName + userToRemoveName + group), challenge,
+                        userInCharge.getPKey())) {
                     for (User userInProgress : allUsers) {
                         if (userInProgress.equals(userToRemove)) {
                             Group groupTmp = new Group(group, null);
@@ -191,6 +192,15 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                         userInProgress.removeGroup(group);
                                         updateAllUsers();
                                         updateGroups();
+
+                                        for (String fileName : filesystem.keySet()) {
+                                            if (filesystem.get(fileName).getOwner().equals(userToRemoveName)) {
+                                                filesystem.get(fileName).removeGroup(group);
+                                                System.out.println("removed " + fileName + " from " + group + " ("
+                                                        + userToRemoveName + ")");
+                                            }
+                                        }
+                                        updateFilesystem();
                                     }
                                 }
                             }
@@ -199,7 +209,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 }
             }
         }
-
         return null;
     }
 
@@ -218,7 +227,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     }
 
     @Override
-    public void updateHashTable(String filePath, User user) {
+    public void updateHashTable(String filePath, User user, String owner) {
         List<User> users;
         if (filesystem.containsKey(filePath)) {
             users = filesystem.get(filePath).getLocations();
@@ -227,7 +236,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             users = new ArrayList<>();
             users.add(user);
         }
-        filesystem.put(filePath, new P2PFile(filePath, null, users));
+        filesystem.put(filePath, new P2PFile(filePath, owner, users));
         System.out.println("users in " + filePath + " " + users);
         updateFilesystem();
     }
@@ -356,7 +365,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!user.getName().equals(userName))
                         continue;
 
-                    if (!checkSignature(encryptedFilePath + userName + groupName + otherUser, signature, user.getPKey()))
+                    if (!checkSignature(encryptedFilePath + userName + groupName + otherUser, signature,
+                            user.getPKey()))
                         continue;
 
                     if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
@@ -364,6 +374,10 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     for (User ownerUser : allUsers) {
                         if (!ownerUser.getName().equals(otherUser))
                             continue;
+
+                        if (!ownerUser.getGroups().contains(groupName))
+                            continue;
+
                         String ownerFilePath = "";
                         for (String part : encryptedFilePath.split("/")) {
                             if (part.equals(""))
@@ -427,5 +441,33 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         }
 
         return "Unable to add your file to " + groupName;
+    }
+
+    @Override
+    public String removeFileFromGroup(String encryptedFilePath, String userName, String groupName, String signature)
+            throws RemoteException {
+        for (Group targetGroup : groups) {
+            if (targetGroup.getName().equals(groupName)) {
+                for (User user : allUsers) {
+                    if (!user.getName().equals(userName))
+                        continue;
+
+                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                        continue;
+
+                    if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
+                        continue;
+
+                    if (!filesystem.containsKey(encryptedFilePath))
+                        continue;
+
+                    filesystem.get(encryptedFilePath).removeGroup(groupName);
+                    updateFilesystem();
+                    return "Your file was successfully removed from " + groupName;
+                }
+            }
+        }
+
+        return "Unable to remove your file from " + groupName;
     }
 }
