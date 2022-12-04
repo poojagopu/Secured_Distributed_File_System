@@ -97,7 +97,7 @@ public class P2PClient {
             String response = peer.createFile(encryptedFilePath);
             System.out.println("response: " + response);
             if (response != null) {
-                masterObj.updateHashTable(encryptedFilePath, user, myUserName);
+                masterObj.updateHashTable(encryptedFilePath, user, myUserName, "File");
                 List<User> userInfo = masterObj.getPeerInfo(encryptedFilePath);
                 System.out.println(userInfo);
             }
@@ -118,7 +118,7 @@ public class P2PClient {
             }
             String ans = peer.createDirectory(encryptedFilePath);
             if (ans != null) {
-                masterObj.updateHashTable(encryptedFilePath, user, myUserName);
+                masterObj.updateHashTable(encryptedFilePath, user, myUserName, "Directory");
             }
             System.out.println("Directory created successfully.");
         } catch (Exception e) {
@@ -172,6 +172,20 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             String fileData = masterObj.addFileToGroup(encryptedFilePath, myUserName, groupName,
+                    signWithPrivateKey(encryptedFilePath + myUserName + groupName));
+            System.out.println(fileData);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static void addDirectoryToGroup(P2PMaster masterObj, String filePath, String groupName) {
+        try {
+            String encryptedFilePath = "";
+            for (String part : filePath.split("/")) {
+                encryptedFilePath += "/" + encryption(part, encryptionKey);
+            }
+            String fileData = masterObj.addDirectoryToGroup(encryptedFilePath, myUserName, groupName,
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
             System.out.println(fileData);
         } catch (Exception e) {
@@ -303,6 +317,12 @@ public class P2PClient {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();
                     addFileToGroup(masterObj, fileName, groupName);
+                } else if (userChoice.equals("addDirectoryToGroup")) {
+                    System.out.println("Enter groupName: ");
+                    String groupName = userScan.nextLine();
+                    System.out.println("Enter directoryPath: ");
+                    String fileName = userScan.nextLine();
+                    addDirectoryToGroup(masterObj, fileName, groupName);
                 } else if (userChoice.equals("addUserToGroup")) {
                     System.out.println("Enter user to add: ");
                     String userToAdd = userScan.nextLine();

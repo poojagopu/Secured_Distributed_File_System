@@ -227,7 +227,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     }
 
     @Override
-    public void updateHashTable(String filePath, User user, String owner) {
+    public void updateHashTable(String filePath, User user, String owner, String type) {
         List<User> users;
         if (filesystem.containsKey(filePath)) {
             users = filesystem.get(filePath).getLocations();
@@ -236,7 +236,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             users = new ArrayList<>();
             users.add(user);
         }
-        filesystem.put(filePath, new P2PFile(filePath, owner, users));
+        filesystem.put(filePath, new P2PFile(filePath, owner, users, type));
         System.out.println("users in " + filePath + " " + users);
         updateFilesystem();
     }
@@ -433,6 +433,9 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!filesystem.containsKey(encryptedFilePath))
                         continue;
 
+                    if (!filesystem.get(encryptedFilePath).getType().equals("File"))
+                        continue;
+
                     filesystem.get(encryptedFilePath).addGroup(groupName);
                     updateFilesystem();
                     return "Your file was successfully added to " + groupName;
@@ -461,6 +464,9 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!filesystem.containsKey(encryptedFilePath))
                         continue;
 
+                    if (!filesystem.get(encryptedFilePath).getType().equals("File"))
+                        continue;
+
                     filesystem.get(encryptedFilePath).removeGroup(groupName);
                     updateFilesystem();
                     return "Your file was successfully removed from " + groupName;
@@ -469,5 +475,51 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         }
 
         return "Unable to remove your file from " + groupName;
+    }
+
+    @Override
+    public String addDirectoryToGroup(String encryptedFilePath, String userName, String groupName, String signature)
+            throws RemoteException {
+        Group groupTmp = new Group(groupName, userName);
+        if (!groups.contains(groupTmp)) {
+            for (User user : allUsers) {
+                if (!user.getName().equals(userName))
+                    continue;
+                groups.add(groupTmp);
+                user.addGroup(groupName);
+                updateAllUsers();
+                updateGroups();
+            }
+        }
+        for (Group targetGroup : groups) {
+            if (targetGroup.getName().equals(groupName)) {
+                for (User user : allUsers) {
+                    if (!user.getName().equals(userName))
+                        continue;
+
+                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                        continue;
+
+                    if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
+                        continue;
+
+                    if (!filesystem.containsKey(encryptedFilePath))
+                        continue;
+
+                    if (!filesystem.get(encryptedFilePath).getType().equals("Directory"))
+                        continue;
+
+                    filesystem.get(encryptedFilePath).addGroup(groupName);
+                    for (String fileName : filesystem.keySet()) {
+                        if (fileName.startsWith(encryptedFilePath))
+                            System.out.println(fileName + " " + filesystem.get(fileName).getType());
+                    }
+                    updateFilesystem();
+                    return "Your directory was successfully added to " + groupName;
+                }
+            }
+        }
+
+        return "Unable to add your directory to " + groupName;
     }
 }

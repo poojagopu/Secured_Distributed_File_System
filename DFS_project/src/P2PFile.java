@@ -8,12 +8,14 @@ public class P2PFile implements Serializable {
     private String owner;
     private Set<String> groups;
     private List<User> locations;
+    private String type;
 
-    P2PFile(String name, String owner, List<User> locations) {
+    P2PFile(String name, String owner, List<User> locations, String type) {
         this.name = name;
         this.owner = owner;
         this.groups = new HashSet<>();
         this.locations = locations;
+        this.type = type;
     }
 
     public Set<String> getGroups() {
@@ -56,5 +58,13 @@ public class P2PFile implements Serializable {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
