@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
@@ -135,7 +136,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 if (checkSignature((currentUserName + userToAddName + group), challenge, userInCharge.getPKey())) {
                     for (User userInProgress : allUsers) {
                         if (userInProgress.equals(userToAdd)) {
-                            Group groupTmp = new Group(group, currentUserName, getSecureRandomKey("AES", 256));
+                            Group groupTmp = new Group(group, currentUserName);
                             if (!groups.contains(groupTmp)) {
                                 groups.add(groupTmp);
                                 userInProgress.addGroup(group);
@@ -178,7 +179,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 if (checkSignature((currentUserName + userToRemoveName + group), challenge, userInCharge.getPKey())) {
                     for (User userInProgress : allUsers) {
                         if (userInProgress.equals(userToRemove)) {
-                            Group groupTmp = new Group(group, null, null);
+                            Group groupTmp = new Group(group, null);
                             if (groups.contains(groupTmp)) {
                                 for (Group existingGroup : groups) {
                                     if (existingGroup.equals(groupTmp)
@@ -222,7 +223,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             users = new ArrayList<>();
             users.add(user);
         }
-        filesystem.put(filePath, new P2PFile(filePath, null, null, users));
+        filesystem.put(filePath, new P2PFile(filePath, null, users));
         System.out.println("users in " + filePath + " " + users);
         updateFilesystem();
     }
@@ -336,7 +337,85 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             return new String(cipher.doFinal(Base64.getUrlDecoder().decode(strToDecode)));
         } catch (Exception e) {
             System.out.println("Something went wrong in decryption : " + e.toString());
+            e.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public String readOthersFile(String encryptedFilePath, String userName, String groupName, String signature)
+            throws IOException, RemoteException {
+        for (Group targetGroup : groups) {
+            if (targetGroup.getName().equals(groupName)) {
+                for (User user : allUsers) {
+                    if (!user.getName().equals(userName))
+                        continue;
+
+                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                        continue;
+
+                    if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
+                        continue;
+                    for (User ownerUser : allUsers) {
+                        if (!ownerUser.getName().equals(targetGroup.getOwner()))
+                            continue;
+                        String ownerFilePath = "";
+                        for (String part : encryptedFilePath.split("/")) {
+                            if (part.equals(""))
+                                continue;
+                            ownerFilePath += "/" + encryption(decryption(part, user.getEKey()), ownerUser.getEKey());
+                        }
+                        try {
+                            List<User> users = getPeerInfo(ownerFilePath);
+                            User userPeer = users.get(0);
+                            RMIFileSystem peer = (RMIFileSystem) Naming
+                                    .lookup("rmi://" + userPeer.ip + ":" + userPeer.port + "/master");
+                            String fileData = peer.readFile(ownerFilePath);
+                            if (fileData == null) {
+                                System.out.println("Failed to read file......");
+                                return "Error";
+                            }
+                            return decryption(fileData, ownerUser.getEKey());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            return "Error...";
+                        }
+                    }
+                }
+            }
+        }
+        return "Unable to read file.";
+    }
+
+    @Override
+    public String addFileToGroup(String encryptedFilePath, String userName, String groupName, String signature)
+            throws RemoteException {
+        for (Group targetGroup : groups) {
+            if (targetGroup.getName().equals(groupName)) {
+                for (User user : allUsers) {
+                    if (!user.getName().equals(userName))
+                        continue;
+
+                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                        continue;
+
+                    if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
+                        continue;
+
+                    if (!filesystem.containsKey(encryptedFilePath))
+                        continue;
+
+                    System.out.println("You can add!");
+                    filesystem.get(encryptedFilePath).addGroup(groupName);
+                    updateFilesystem();
+                    return null;
+                }
+            }
+        }
+
+        // create new group if doesn't exist
+
+        System.out.println("You can't add...");
         return null;
     }
 }

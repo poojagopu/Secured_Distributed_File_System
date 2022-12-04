@@ -21,8 +21,10 @@ public class P2PClient {
     private static String encryptionKey;
 
     public static String myUserName = "ray";
-    public String myIP = "localhost";
-    public String myPort = "9876";
+    public static String myIP = "localhost";
+    public static String myPort = "9876";
+    public static String masterIP = "localhost";
+    public static String masterport = "1234";
 
     // Key setter
     public static void setKey(final String myKey) {
@@ -133,10 +135,50 @@ public class P2PClient {
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
+            System.out.println(encryptedFilePath);
             List<User> users = masterObj.getPeerInfo(encryptedFilePath);
             User user = users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
             String fileData = peer.readFile(encryptedFilePath);
+            if (fileData == null) {
+                System.out.println("Failed to read file......");
+                return;
+            }
+            System.out.println("File Data : " + decryption(fileData, encryptionKey));
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+    }
+
+    public static void read(P2PMaster masterObj, String filePath, String groupName) {
+        try {
+            String encryptedFilePath = "";
+            for (String part : filePath.split("/")) {
+                encryptedFilePath += "/" + encryption(part, encryptionKey);
+            }
+            String fileData = masterObj.readOthersFile(encryptedFilePath, myUserName, groupName,
+                    signWithPrivateKey(encryptedFilePath + myUserName + groupName));
+            System.out.println("data: " + fileData);
+            if (fileData == null) {
+                System.out.println("Failed to read file......");
+                return;
+            }
+            //System.out.println("File Data : " + decryption(fileData, encryptionKey));
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+    }
+
+    public static void addFileToGroup(P2PMaster masterObj, String filePath, String groupName) {
+        try {
+            String encryptedFilePath = "";
+            for (String part : filePath.split("/")) {
+                encryptedFilePath += "/" + encryption(part, encryptionKey);
+            }
+            String fileData = masterObj.addFileToGroup(encryptedFilePath, myUserName, groupName,
+                    signWithPrivateKey(encryptedFilePath + myUserName + groupName));
             if (fileData == null) {
                 System.out.println("Failed to read file......");
                 return;
@@ -211,8 +253,6 @@ public class P2PClient {
     }
 
     public static void main(String args[]) {
-        String masterIP = "localhost";
-        String masterport = "1234";
         String userChoice;
 
         try {
@@ -232,8 +272,6 @@ public class P2PClient {
 
             // lookup method to find reference of remote object
             P2PMaster masterObj = (P2PMaster) Naming.lookup("rmi://" + masterIP + ":" + masterport + "/master");
-            masterObj.removeUserFromGroup(myUserName, "bill", "group1",
-                    signWithPrivateKey(myUserName + "bill" + "group1"));
 
             Scanner userScan = new Scanner(System.in);
             help();
@@ -263,6 +301,25 @@ public class P2PClient {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();
                     read(masterObj, fileName);
+                } else if (userChoice.equals("groupRead")) {
+                    System.out.println("Enter groupName: ");
+                    String groupName = userScan.nextLine();
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    read(masterObj, fileName, groupName);
+                } else if (userChoice.equals("addFileToGroup")) {
+                    System.out.println("Enter groupName: ");
+                    String groupName = userScan.nextLine();
+                    System.out.println("Enter filePath: ");
+                    String fileName = userScan.nextLine();
+                    addFileToGroup(masterObj, fileName, groupName);
+                } else if (userChoice.equals("addUserToGroup")) {
+                    System.out.println("Enter user to add: ");
+                    String userToAdd = userScan.nextLine();
+                    System.out.println("Enter groupName: ");
+                    String groupName = userScan.nextLine();
+                    masterObj.addUserToGroup(myUserName, userToAdd, groupName,
+                            signWithPrivateKey(myUserName + userToAdd + groupName));
                 } else if (userChoice.equals("restore")) {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();

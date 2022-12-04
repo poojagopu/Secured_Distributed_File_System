@@ -2,6 +2,7 @@
 *.class
 # server configurations
 **/configurations/**
+**/*+configurations/**
 # keys
 *.key
 # encrypted files

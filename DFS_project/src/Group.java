@@ -3,28 +3,17 @@ import java.io.Serializable;
 public class Group implements Serializable {
     private String name;
     private String owner;
-    private String key;
 
-    Group(String name, String owner, String key) {
+    Group(String name, String owner) {
         this.name = name;
         this.owner = owner;
-        this.key = key;
     }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
     public void setName(String name) {
         this.name = name;
     }
 
     public void setOwner(String owner) {
         this.owner = owner;
-    }
-
-    public String getKey() {
-        return key;
     }
 
     public String getName() {

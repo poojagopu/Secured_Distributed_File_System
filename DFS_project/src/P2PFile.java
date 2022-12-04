@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class P2PFile implements Serializable {
@@ -7,10 +8,10 @@ public class P2PFile implements Serializable {
     private List<String> groups;
     private List<User> locations;
 
-    P2PFile(String name, String owner, List<String> groups, List<User> locations) {
+    P2PFile(String name, String owner, List<User> locations) {
         this.name = name;
         this.owner = owner;
-        this.groups = groups;
+        this.groups = new ArrayList<>();
         this.locations = locations;
     }
 
@@ -32,6 +33,11 @@ public class P2PFile implements Serializable {
 
     public void setGroups(List<String> groups) {
         this.groups = groups;
+    }
+
+    public void addGroup(String group) {
+        System.out.println(this.groups);
+        this.groups.add(group);
     }
 
     public void setLocations(List<User> locations) {
