@@ -53,6 +53,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         filePath = path + filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
+        fileObject.getParentFile().mkdirs();
         try {
             if (fileObject.createNewFile()) {
                 fileDeletion.put(filePath, false);

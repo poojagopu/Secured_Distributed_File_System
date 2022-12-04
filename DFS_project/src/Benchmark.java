@@ -14,7 +14,12 @@ public class Benchmark {
         P2PClient client2 = new P2PClient("bob", "localhost", "8001", "localhost", "1234");
         P2PClient client3 = new P2PClient("bill", "localhost", "8002", "localhost", "1234");
 
-        for (int i = 0; i < 999999; i++)
+        final long startTime = System.nanoTime();
+
+        for (int i = 0; i < 99999; i++)
             client2.create("test" + i);
+
+        final long duration = System.nanoTime() - startTime;
+        System.out.println((duration)/1000000000 + "s  " + ((duration)%1000000000)/10000000+"ms");
     }
 }
