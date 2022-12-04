@@ -378,6 +378,12 @@ public class P2PClient {
                     System.out.print("Enter directory path: ");
                     String fileName = userScan.nextLine();
                     System.out.println(client.addDirectoryToGroup(fileName, groupName));
+                } else if (userChoice.equals("removeDirectoryFromGroup")) {
+                    System.out.print("Enter groupname: ");
+                    String groupName = userScan.nextLine();
+                    System.out.print("Enter directory path: ");
+                    String fileName = userScan.nextLine();
+                    System.out.println(client.removeDirectoryFromGroup(fileName, groupName));
                 } else if (userChoice.equals("addUserToGroup")) {
                     System.out.print("Enter user to add: ");
                     String userToAdd = userScan.nextLine();

@@ -39,13 +39,13 @@ public class P2PFile implements Serializable {
     }
 
     public void addGroup(String group) {
-        System.out.println(this.groups);
         this.groups.add(group);
+        System.out.println(this.groups);
     }
 
     public void removeGroup(String group) {
-        System.out.println(this.groups);
         this.groups.remove(group);
+        System.out.println(this.groups);
     }
 
     public void setLocations(List<User> locations) {

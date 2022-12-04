@@ -397,6 +397,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
                     if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
                         continue;
+
                     for (User ownerUser : allUsers) {
                         if (!ownerUser.getName().equals(otherUser))
                             continue;
@@ -410,6 +411,13 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                 continue;
                             ownerFilePath += "/" + encryption(decryption(part, user.getEKey()), ownerUser.getEKey());
                         }
+
+                        if (!filesystem.containsKey(ownerFilePath))
+                            continue;
+
+                        if (!filesystem.get(ownerFilePath).getGroups().contains(groupName))
+                            continue;
+
                         try {
                             List<User> users = getPeerInfo(ownerFilePath);
                             User userPeer = users.get(0);
@@ -560,13 +568,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
                         continue;
 
-                    if (!filesystem.containsKey(encryptedFilePath))
-                        continue;
-
-                    if (!filesystem.get(encryptedFilePath).getType().equals("Directory"))
-                        continue;
-
-                    filesystem.get(encryptedFilePath).removeGroup(groupName);
                     for (String fileName : filesystem.keySet()) {
                         if (fileName.startsWith(encryptedFilePath)) {
                             System.out.println(fileName + " " + filesystem.get(fileName).getType());
