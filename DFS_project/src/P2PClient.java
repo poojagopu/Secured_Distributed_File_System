@@ -14,7 +14,6 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class P2PClient {
-
     // Security variables
     private static SecretKeySpec secretKeySpec;
     private static byte[] key;
@@ -62,7 +61,7 @@ public class P2PClient {
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
             return new String(cipher.doFinal(Base64.getUrlDecoder().decode(strToDecode)));
         } catch (Exception e) {
-            System.out.println("Something went wrong in decryption : " + e.toString());
+            System.out.println("Something went wrong in decryption: " + e.toString());
         }
         return null;
     }
@@ -81,7 +80,7 @@ public class P2PClient {
             byte[] signatureBytes = sig.sign();
             return Base64.getUrlEncoder().encodeToString(signatureBytes);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
         }
 
         return null;
@@ -105,7 +104,6 @@ public class P2PClient {
             System.out.println(response);
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
@@ -125,7 +123,6 @@ public class P2PClient {
             System.out.println("Directory created successfully.");
         } catch (Exception e) {
             System.out.println("Directory not created :(");
-            System.out.println(e);
         }
     }
 
@@ -141,13 +138,12 @@ public class P2PClient {
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
             String fileData = peer.readFile(encryptedFilePath);
             if (fileData == null) {
-                System.out.println("Failed to read file......");
+                System.out.println("Error: file is empty.");
                 return;
             }
-            System.out.println("File Data : " + decryption(fileData, encryptionKey));
+            System.out.println("File data: " + decryption(fileData, encryptionKey));
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
@@ -159,15 +155,13 @@ public class P2PClient {
             }
             String fileData = masterObj.readOthersFile(encryptedFilePath, myUserName, groupName,
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
-            System.out.println("data: " + fileData);
             if (fileData == null) {
-                System.out.println("Failed to read file......");
+                System.out.println("Error: file is empty.");
                 return;
             }
-            //System.out.println("File Data : " + decryption(fileData, encryptionKey));
+            System.out.println("File data: " + fileData);
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
@@ -179,14 +173,9 @@ public class P2PClient {
             }
             String fileData = masterObj.addFileToGroup(encryptedFilePath, myUserName, groupName,
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
-            if (fileData == null) {
-                System.out.println("Failed to read file......");
-                return;
-            }
-            System.out.println("File Data : " + decryption(fileData, encryptionKey));
+            System.out.println(fileData);
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
@@ -208,7 +197,6 @@ public class P2PClient {
             System.out.println("Successfully written in the file");
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
@@ -318,8 +306,15 @@ public class P2PClient {
                     String userToAdd = userScan.nextLine();
                     System.out.println("Enter groupName: ");
                     String groupName = userScan.nextLine();
-                    masterObj.addUserToGroup(myUserName, userToAdd, groupName,
-                            signWithPrivateKey(myUserName + userToAdd + groupName));
+                    System.out.println(masterObj.addUserToGroup(myUserName, userToAdd, groupName,
+                            signWithPrivateKey(myUserName + userToAdd + groupName)));
+                } else if (userChoice.equals("removeUserFromGroup")) {
+                    System.out.println("Enter user to remove: ");
+                    String userToRemove = userScan.nextLine();
+                    System.out.println("Enter groupName: ");
+                    String groupName = userScan.nextLine();
+                    System.out.println(masterObj.removeUserFromGroup(myUserName, userToRemove, groupName,
+                            signWithPrivateKey(myUserName + userToRemove + groupName)));
                 } else if (userChoice.equals("restore")) {
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();
@@ -336,12 +331,13 @@ public class P2PClient {
             userScan.close();
         } catch (Exception e) {
             System.out.println(e);
-            e.printStackTrace();
         }
     }
 
     private static void help() {
         System.out.println("Enter a command:");
-        System.out.println("  >>> $ [help, exit, createDirectory, create, write, read, delete, restore]");
+        System.out.println("  General      >>> $ [help, exit]");
+        System.out.println("  Modify Files >>> $ [createDirectory, create, write, read, delete, restore]");
+        System.out.println("  Permissions  >>> $ [addUserToGroup, removeUserFromGroup, addFileToGroup]");
     }
 }

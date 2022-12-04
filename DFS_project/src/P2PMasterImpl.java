@@ -142,6 +142,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                 userInProgress.addGroup(group);
                                 updateAllUsers();
                                 updateGroups();
+                                return userToAddName + " was successfully added to " + currentUserName + "'s group ("
+                                        + group + ")";
                             } else {
                                 for (Group existingGroup : groups) {
                                     if (existingGroup.equals(groupTmp)
@@ -150,6 +152,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                         userInProgress.addGroup(group);
                                         updateAllUsers();
                                         updateGroups();
+                                        return userToAddName + " was successfully added to " + currentUserName
+                                                + "'s group (" + group + ")";
                                     }
                                 }
                             }
@@ -159,7 +163,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             }
         }
 
-        return null;
+        return userToAddName + " could not be added to " + currentUserName + "'s group (" + group + ")";
     }
 
     @Override
@@ -372,13 +376,11 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                     .lookup("rmi://" + userPeer.ip + ":" + userPeer.port + "/master");
                             String fileData = peer.readFile(ownerFilePath);
                             if (fileData == null) {
-                                System.out.println("Failed to read file......");
-                                return "Error";
+                                return "Error: this is an empty file.";
                             }
                             return decryption(fileData, ownerUser.getEKey());
                         } catch (Exception e) {
-                            e.printStackTrace();
-                            return "Error...";
+                            return "Error: your permissions are not met.";
                         }
                     }
                 }
@@ -418,11 +420,11 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
                     filesystem.get(encryptedFilePath).addGroup(groupName);
                     updateFilesystem();
-                    return null;
+                    return "Your file was successfully added to " + groupName;
                 }
             }
         }
 
-        return null;
+        return "Unable to add your file to " + groupName;
     }
 }
