@@ -23,7 +23,7 @@ public interface P2PMaster extends Remote {
     public String removeUserFromGroup(String currentUser, String userToAdd, String group, String challenge)
             throws RemoteException;
 
-    public String readOthersFile(String encryptedFilePath, String userName, String groupName, String signature)
+    public String readOthersFile(String encryptedFilePath, String userName, String groupName, String otherUser, String signature)
             throws IOException, RemoteException;
 
     public void updateHashTable(String filePath, User user) throws RemoteException;

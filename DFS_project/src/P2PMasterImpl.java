@@ -347,7 +347,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     }
 
     @Override
-    public String readOthersFile(String encryptedFilePath, String userName, String groupName, String signature)
+    public String readOthersFile(String encryptedFilePath, String userName, String groupName, String otherUser,
+            String signature)
             throws IOException, RemoteException {
         for (Group targetGroup : groups) {
             if (targetGroup.getName().equals(groupName)) {
@@ -355,13 +356,13 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!user.getName().equals(userName))
                         continue;
 
-                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                    if (!checkSignature(encryptedFilePath + userName + groupName + otherUser, signature, user.getPKey()))
                         continue;
 
                     if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
                         continue;
                     for (User ownerUser : allUsers) {
-                        if (!ownerUser.getName().equals(targetGroup.getOwner()))
+                        if (!ownerUser.getName().equals(otherUser))
                             continue;
                         String ownerFilePath = "";
                         for (String part : encryptedFilePath.split("/")) {

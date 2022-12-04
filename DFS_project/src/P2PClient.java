@@ -147,14 +147,14 @@ public class P2PClient {
         }
     }
 
-    public static void read(P2PMaster masterObj, String filePath, String groupName) {
+    public static void read(P2PMaster masterObj, String filePath, String groupName, String userName) {
         try {
             String encryptedFilePath = "";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            String fileData = masterObj.readOthersFile(encryptedFilePath, myUserName, groupName,
-                    signWithPrivateKey(encryptedFilePath + myUserName + groupName));
+            String fileData = masterObj.readOthersFile(encryptedFilePath, myUserName, groupName, userName,
+                    signWithPrivateKey(encryptedFilePath + myUserName + groupName + userName));
             if (fileData == null) {
                 System.out.println("Error: file is empty.");
                 return;
@@ -292,9 +292,11 @@ public class P2PClient {
                 } else if (userChoice.equals("groupRead")) {
                     System.out.println("Enter groupName: ");
                     String groupName = userScan.nextLine();
+                    System.out.println("Enter userName: ");
+                    String userName = userScan.nextLine();
                     System.out.println("Enter filePath: ");
                     String fileName = userScan.nextLine();
-                    read(masterObj, fileName, groupName);
+                    read(masterObj, fileName, groupName, userName);
                 } else if (userChoice.equals("addFileToGroup")) {
                     System.out.println("Enter groupName: ");
                     String groupName = userScan.nextLine();
