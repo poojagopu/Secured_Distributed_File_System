@@ -390,6 +390,17 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     @Override
     public String addFileToGroup(String encryptedFilePath, String userName, String groupName, String signature)
             throws RemoteException {
+        Group groupTmp = new Group(groupName, userName);
+        if (!groups.contains(groupTmp)) {
+            for (User user : allUsers) {
+                if (!user.getName().equals(userName))
+                    continue;
+                groups.add(groupTmp);
+                user.addGroup(groupName);
+                updateAllUsers();
+                updateGroups();
+            }
+        }
         for (Group targetGroup : groups) {
             if (targetGroup.getName().equals(groupName)) {
                 for (User user : allUsers) {
@@ -405,7 +416,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!filesystem.containsKey(encryptedFilePath))
                         continue;
 
-                    System.out.println("You can add!");
                     filesystem.get(encryptedFilePath).addGroup(groupName);
                     updateFilesystem();
                     return null;
@@ -413,9 +423,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             }
         }
 
-        // create new group if doesn't exist
-
-        System.out.println("You can't add...");
         return null;
     }
 }
