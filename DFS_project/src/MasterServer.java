@@ -2,7 +2,7 @@ import java.rmi.*;
 import java.rmi.registry.*;
 
 public class MasterServer {
-    public static void main(String args[]) {
+    public void start() {
         try {
             // Create an object of the interface
             // implementation class
@@ -18,5 +18,10 @@ public class MasterServer {
         } catch (Exception ae) {
             System.out.println(ae);
         }
+    }
+
+    public static void main(String args[]) {
+        MasterServer master = new MasterServer();
+        master.start();
     }
 }

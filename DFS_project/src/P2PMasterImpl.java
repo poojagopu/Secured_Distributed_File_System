@@ -14,12 +14,14 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     public HashMap<String, P2PFile> filesystem;
     public Set<User> allUsers; // username -> userPublicKey
     public Set<Group> groups;
+    public HashSet<User> connectedServers;
 
     protected P2PMasterImpl() throws IOException {
         super();
         allUsers = new HashSet<>();
         groups = new HashSet<>();
         filesystem = new HashMap<>();
+        connectedServers = new HashSet<>();
 
         // Set up config file for storing authorized users
         File allUsersDB = new File("configurations/allUsers");
@@ -110,11 +112,12 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         String ans = null;
         User newUser = new User(userName, userIP, userPort, userPublicKey, null);
         if (allUsers.contains(newUser)) {
-            System.out.println("User '" + newUser.name + "' already exists");
+            connectedServers.add(newUser);
             return ans;
         }
         newUser.setEKey(getSecureRandomKey("AES", 256));
         allUsers.add(newUser);
+        connectedServers.add(newUser);
         updateAllUsers();
         ans = encryptWithPublicKey(newUser.getEKey(), newUser.getPKey());
         return ans;
@@ -214,16 +217,26 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
     @Override
     public User getRandomPeer() throws RemoteException {
-        User[] userArray = allUsers.toArray(new User[allUsers.size()]);
+        User[] userArray = connectedServers.toArray(new User[connectedServers.size()]);
         // generate a random number
         Random random = new Random();
         // this will generate a random number between 0 and
         // HashSet.size - 1
-        int randomNumber = random.nextInt(allUsers.size());
+        int randomNumber = random.nextInt(connectedServers.size());
         User selectedUser = userArray[randomNumber];
         User strippedUser = new User(selectedUser.getName(), selectedUser.getIp(), selectedUser.getPort(),
                 selectedUser.getPKey(), null);
         return strippedUser;
+    }
+
+    @Override
+    public List<User> getConnectedServers() throws RemoteException {
+        List<User> strippedUsers = new ArrayList<>();
+        for (User user : connectedServers) {
+            strippedUsers.add(new User(user.getName(), user.getIp(), user.getPort(),
+                    user.getPKey(), null));
+        }
+        return strippedUsers;
     }
 
     @Override
@@ -237,7 +250,20 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             users.add(user);
         }
         filesystem.put(filePath, new P2PFile(filePath, owner, users, type));
-        System.out.println("users in " + filePath + " " + users);
+        updateFilesystem();
+    }
+
+    @Override
+    public void updateHashTable(String filePath, List<User> users, String owner, String type) {
+        List<User> currentUsers;
+        if (filesystem.containsKey(filePath)) {
+            currentUsers = filesystem.get(filePath).getLocations();
+            users.addAll(currentUsers);
+        } else {
+            currentUsers = new ArrayList<>();
+            users.addAll(currentUsers);
+        }
+        filesystem.put(filePath, new P2PFile(filePath, owner, users, type));
         updateFilesystem();
     }
 
@@ -503,16 +529,11 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                     if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
                         continue;
 
-                    if (!filesystem.containsKey(encryptedFilePath))
-                        continue;
-
-                    if (!filesystem.get(encryptedFilePath).getType().equals("Directory"))
-                        continue;
-
-                    filesystem.get(encryptedFilePath).addGroup(groupName);
                     for (String fileName : filesystem.keySet()) {
-                        if (fileName.startsWith(encryptedFilePath))
+                        if (fileName.startsWith(encryptedFilePath)) {
                             System.out.println(fileName + " " + filesystem.get(fileName).getType());
+                            filesystem.get(fileName).addGroup(groupName);
+                        }
                     }
                     updateFilesystem();
                     return "Your directory was successfully added to " + groupName;
@@ -521,5 +542,43 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         }
 
         return "Unable to add your directory to " + groupName;
+    }
+
+    @Override
+    public String removeDirectoryFromGroup(String encryptedFilePath, String userName, String groupName,
+            String signature)
+            throws RemoteException {
+        for (Group targetGroup : groups) {
+            if (targetGroup.getName().equals(groupName)) {
+                for (User user : allUsers) {
+                    if (!user.getName().equals(userName))
+                        continue;
+
+                    if (!checkSignature(encryptedFilePath + userName + groupName, signature, user.getPKey()))
+                        continue;
+
+                    if (!(user.getGroups().contains(groupName) || targetGroup.getOwner().equals(userName)))
+                        continue;
+
+                    if (!filesystem.containsKey(encryptedFilePath))
+                        continue;
+
+                    if (!filesystem.get(encryptedFilePath).getType().equals("Directory"))
+                        continue;
+
+                    filesystem.get(encryptedFilePath).removeGroup(groupName);
+                    for (String fileName : filesystem.keySet()) {
+                        if (fileName.startsWith(encryptedFilePath)) {
+                            System.out.println(fileName + " " + filesystem.get(fileName).getType());
+                            filesystem.get(fileName).removeGroup(groupName);
+                        }
+                    }
+                    updateFilesystem();
+                    return "Your directory was successfully removed from " + groupName;
+                }
+            }
+        }
+
+        return "Unable to removed your directory from " + groupName;
     }
 }

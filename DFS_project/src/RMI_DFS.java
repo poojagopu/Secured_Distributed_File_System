@@ -53,18 +53,16 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         filePath = path + filePath;
         File fileObject = new File(filePath);
         // Method createNewFile() method creates blank file
-        fileObject.getParentFile().mkdirs();
         try {
             if (fileObject.createNewFile()) {
                 fileDeletion.put(filePath, false);
                 updateDeletedFiles();
-                System.out.println("File created: " + fileObject.getName());
             } else {
-                System.out.println("File already exists.");
-                return "File already exists";
+                return "Error: File already exists.";
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return "Error: Unable to add file, check required directories.";
         }
         return "File created successfully.";
     }
@@ -82,11 +80,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                 BufferedReader br = new BufferedReader(new FileReader(filePath));
                 while ((ans = br.readLine()) != null)
                     str.append(ans);
-                System.out.println("Read successfully");
                 br.close();
             }
         } catch (IOException e) {
-            System.out.println("An error occurred.");
             e.printStackTrace();
         }
         return str.toString();
@@ -101,16 +97,13 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             } else {
                 FileWriter fw = new FileWriter(FilePath);
                 BufferedWriter bw = new BufferedWriter(fw);
-                System.out.println("Started writing");
                 fw.write(data);
                 bw.close();
-                System.out.println("Written successfully");
-                return "Written successfully";
+                return "Successfully wrote to the file.";
             }
         } catch (IOException e) {
-            System.out.println("An error occurred.");
             e.printStackTrace();
-            return "An error occurred.";
+            return "Error: Failed to write to the file.";
         }
     }
 
@@ -118,11 +111,11 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     public String restoreFiles(String filePath) throws RemoteException {
         filePath = path + filePath;
         if (!fileDeletion.get(filePath)) {
-            return null;
+            return "Error: Failed to restore file.";
         } else {
             fileDeletion.put(filePath, false);
             updateDeletedFiles();
-            return "File restored successfully";
+            return "File restored successfully.";
         }
     }
 
@@ -130,11 +123,11 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     public String deleteFile(String filePath) throws RemoteException {
         filePath = path + filePath;
         if (fileDeletion.get(filePath)) {
-            return null;
+            return "Error: Failed to delete file.";
         } else {
             fileDeletion.put(filePath, true);
             updateDeletedFiles();
-            return "File Deleted Successfully";
+            return "File deleted successfully.";
         }
     }
 
