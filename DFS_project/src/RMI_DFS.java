@@ -2,6 +2,9 @@ import java.io.*;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     // private Map<String, String> users; // username -> userPublicKey
@@ -41,95 +44,138 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
         System.out.println("Loaded configuration file " + deletedFilesDB.getPath());
     }
 
-    public String createDirectory(String dirPath) throws IOException {
-        dirPath = path + dirPath;
-        File theDir = new File(dirPath);
-        theDir.mkdirs();
-        return "Directory created successfully.";
-    }
-
-    @Override
-    public String createFile(String filePath) throws IOException {
-        filePath = path + filePath;
-        File fileObject = new File(filePath);
-        // Method createNewFile() method creates blank file
-        fileObject.getParentFile().mkdirs();
-        try {
-            if (fileObject.createNewFile()) {
-                fileDeletion.put(filePath, false);
-                updateDeletedFiles();
-            } else {
-                return "Error: File already exists.";
+    public String createDirectory(String dirPath) throws IOException, ExecutionException, InterruptedException {
+        FutureTask cDir = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                String newPath = path + dirPath;
+                File theDir = new File(newPath);
+                theDir.mkdirs();
+                return "Directory created successfully.";
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error: Unable to add file, check required directories.";
-        }
-        return "File created successfully.";
+        });
+        new Thread(cDir).start();
+        return (String) cDir.get();
     }
 
     @Override
-    public String readFile(String filePath) throws IOException {
-        String ans;
-        filePath = path + filePath;
-        StringBuilder str = new StringBuilder();
-        // Creating an object of BufferedReader class
-        try {
-            if (fileDeletion.get(filePath)) {
-                return null;
-            } else {
-                BufferedReader br = new BufferedReader(new FileReader(filePath));
-                while ((ans = br.readLine()) != null)
-                    str.append(ans);
-                br.close();
+    public String createFile(String filePath) throws IOException, ExecutionException, InterruptedException {
+        FutureTask create = new FutureTask<String>(new Callable<String>(){
+            public String call() throws Exception{
+                String newPath = path + filePath;
+                File fileObject = new File(newPath);
+                // Method createNewFile() method creates blank file
+                fileObject.getParentFile().mkdirs();
+                try {
+                    if (fileObject.createNewFile()) {
+                        fileDeletion.put(newPath, false);
+                        updateDeletedFiles();
+                    } else {
+                        return "Error: File already exists.";
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Error: Unable to add file, check required directories.";
+                }
+                return "File created successfully.";
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return str.toString();
+        });
+        new Thread(create).start();
+        return (String) create.get();
     }
 
     @Override
-    public String writeFile(String FilePath, String data) throws RemoteException {
-        FilePath = path + FilePath;
-        try {
-            if (fileDeletion.get(FilePath)) {
-                return null;
-            } else {
-                FileWriter fw = new FileWriter(FilePath);
-                BufferedWriter bw = new BufferedWriter(fw);
-                fw.write(data);
-                bw.close();
-                return "Successfully wrote to the file.";
+    public String readFile(String filePath) throws IOException, ExecutionException, InterruptedException {
+        FutureTask read = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                String ans;
+                String newPath = path + filePath;
+                StringBuilder str = new StringBuilder();
+                // Creating an object of BufferedReader class
+                try {
+                    if (fileDeletion.get(newPath)) {
+                        return null;
+                    } else {
+                        BufferedReader br = new BufferedReader(new FileReader(newPath));
+                        while ((ans = br.readLine()) != null)
+                            str.append(ans);
+                        br.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return str.toString();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Error: Failed to write to the file.";
-        }
+        });
+        new Thread(read).start();
+        return (String) read.get();
     }
 
     @Override
-    public String restoreFiles(String filePath) throws RemoteException {
-        filePath = path + filePath;
-        if (!fileDeletion.get(filePath)) {
-            return "Error: Failed to restore file.";
-        } else {
-            fileDeletion.put(filePath, false);
-            updateDeletedFiles();
-            return "File restored successfully.";
-        }
+    public String writeFile(String FilePath, String data) throws RemoteException, ExecutionException, InterruptedException {
+        FutureTask write = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception{
+                String newPath = path + FilePath;
+                try {
+                    if (fileDeletion.get(newPath)) {
+                        return null;
+                    } else {
+                        FileWriter fw = new FileWriter(newPath);
+                        BufferedWriter bw = new BufferedWriter(fw);
+                        fw.write(data);
+                        bw.close();
+                        return "Successfully wrote to the file.";
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return "Error: Failed to write to the file.";
+                }
+            }
+        });
+        new Thread(write).start();
+        return (String) write.get();
     }
 
     @Override
-    public String deleteFile(String filePath) throws RemoteException {
-        filePath = path + filePath;
-        if (fileDeletion.get(filePath)) {
-            return "Error: Failed to delete file.";
-        } else {
-            fileDeletion.put(filePath, true);
-            updateDeletedFiles();
-            return "File deleted successfully.";
-        }
+    public String restoreFiles(String filePath) throws RemoteException, ExecutionException, InterruptedException {
+        FutureTask restore = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception{
+                String newPath = path + filePath;
+                if (!fileDeletion.get(newPath)) {
+                    return "Error: Failed to restore file.";
+                } else {
+                    fileDeletion.put(newPath, false);
+                    updateDeletedFiles();
+                    return "File restored successfully.";
+                }
+            }
+        });
+
+        new Thread(restore).start();
+        return (String) restore.get();
+    }
+
+    @Override
+    public String deleteFile(String filePath) throws RemoteException, ExecutionException, InterruptedException {
+        FutureTask delete = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                String newPath = path + filePath;
+                if (fileDeletion.get(newPath)) {
+                    return "Error: Failed to delete file.";
+                } else {
+                    fileDeletion.put(newPath, true);
+                    updateDeletedFiles();
+                    return "File deleted successfully.";
+                }
+            }
+        });
+
+        new Thread(delete).start();
+        return (String) delete.get();
     }
 
     private void updateDeletedFiles() {
