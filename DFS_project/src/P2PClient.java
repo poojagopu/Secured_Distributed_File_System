@@ -5,7 +5,6 @@ import java.rmi.*;
 import java.util.*;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -48,7 +47,7 @@ public class P2PClient {
             // lookup method to find reference of remote object
             this.masterObj = (P2PMaster) Naming.lookup("rmi://" + this.masterIP + ":" + this.masterport + "/master");
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
     }
 
@@ -61,8 +60,8 @@ public class P2PClient {
             key = sha.digest(key);
             key = Arrays.copyOf(key, 16);
             secretKeySpec = new SecretKeySpec(key, "AES");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("An error was encountering while setting the encryption key.");
         }
     }
 
@@ -75,7 +74,7 @@ public class P2PClient {
             return Base64.getUrlEncoder()
                     .encodeToString(cipher.doFinal(strToEncode.getBytes("UTF-8")));
         } catch (Exception e) {
-            System.out.println("Something went wrong in encryption: " + e.toString());
+            System.out.println("Something went wrong in encryption.");
         }
         return null;
     }
@@ -88,7 +87,7 @@ public class P2PClient {
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
             return new String(cipher.doFinal(Base64.getUrlDecoder().decode(strToDecode)));
         } catch (Exception e) {
-            System.out.println("Something went wrong in decryption: " + e.toString());
+            System.out.println("Something went wrong in decryption.");
         }
         return null;
     }
@@ -107,57 +106,60 @@ public class P2PClient {
             byte[] signatureBytes = sig.sign();
             return Base64.getUrlEncoder().encodeToString(signatureBytes);
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("An error was encountered while signing with the private key.");
         }
 
         return null;
     }
 
     public String create(String filePath) {
+        String response = null;
         try {
             String encryptedFilePath = "";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            String response = null;
             List<User> connectedServers = this.masterObj.getConnectedServers();
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-                response = peer.createFile(encryptedFilePath);
+                String tempResponse = peer.createFile(encryptedFilePath);
+                if (response == null)
+                    response = tempResponse;
             }
-            if (response != null) {
+            if (response != null)
                 this.masterObj.updateHashTable(encryptedFilePath, connectedServers, myUserName, "File");
-                return response;
-            }
+            else
+                response = "An error was encountered while creating the file.";
         } catch (Exception e) {
-            System.out.println(e);
+            response = "An error was encountered while creating the file.";
         }
-        return null;
+        return response;
     }
 
     public String createDirectory(String dirName) {
+        String ans = null;
         try {
             String encryptedFilePath = "";
             for (String part : dirName.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            String ans = null;
             List<User> connectedServers = this.masterObj.getConnectedServers();
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 ans = peer.createDirectory(encryptedFilePath);
             }
-            if (ans != null) {
+            if (ans != null)
                 this.masterObj.updateHashTable(encryptedFilePath, connectedServers, myUserName, "Directory");
-                return ans;
-            }
+            else
+                ans = "An error was encountered while creating the directory.";
         } catch (Exception e) {
-            System.out.println(e);
+            ans = "An error was encountered while creating the directory.";
         }
-        return "Failed to create directory.";
+        return ans;
     }
 
     public String read(String filePath) {
+        String fileData = null;
         try {
             String encryptedFilePath = "";
             for (String part : filePath.split("/")) {
@@ -166,33 +168,33 @@ public class P2PClient {
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
             User user = users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-            String fileData = peer.readFile(encryptedFilePath);
-            if (fileData == null) {
-                return "Notice: File is empty.";
-            }
-            return decryption(fileData, encryptionKey);
+            fileData = peer.readFile(encryptedFilePath);
+            if (fileData == null || fileData.isEmpty())
+                fileData = "Notice: File is empty.";
+            else
+                fileData = decryption(fileData, encryptionKey);
         } catch (Exception e) {
-            System.out.println(e);
+            fileData = "Error: Unable to read file.";
         }
-        return null;
+        return fileData;
     }
 
     public String read(String filePath, String groupName, String userName) {
+        String fileData = null;
         try {
             String encryptedFilePath = "";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            String fileData = this.masterObj.readOthersFile(encryptedFilePath, myUserName, groupName, userName,
+            fileData = this.masterObj.readOthersFile(encryptedFilePath, myUserName, groupName, userName,
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName + userName));
             if (fileData == null) {
-                return "Notice: File is empty.";
+                fileData = "Notice: File is empty.";
             }
-            return fileData;
         } catch (Exception e) {
-            System.out.println(e);
+            fileData = "Error: Unable to read file.";
         }
-        return null;
+        return fileData;
     }
 
     public String addFileToGroup(String filePath, String groupName) {
@@ -205,9 +207,22 @@ public class P2PClient {
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
             return fileData;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to add file to group.";
         }
-        return null;
+    }
+
+    public String removeFileFromGroup(String filePath, String groupName) {
+        try {
+            String encryptedFilePath = "";
+            for (String part : filePath.split("/")) {
+                encryptedFilePath += "/" + encryption(part, encryptionKey);
+            }
+            String fileData = this.masterObj.removeFileFromGroup(encryptedFilePath, myUserName, groupName,
+                    signWithPrivateKey(encryptedFilePath + myUserName + groupName));
+            return fileData;
+        } catch (Exception e) {
+            return "Unable to remove file from group.";
+        }
     }
 
     public String addDirectoryToGroup(String filePath, String groupName) {
@@ -220,9 +235,8 @@ public class P2PClient {
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
             return fileData;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to add directory to group.";
         }
-        return null;
     }
 
     public String removeDirectoryFromGroup(String filePath, String groupName) {
@@ -235,9 +249,8 @@ public class P2PClient {
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName));
             return fileData;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to remove directory from group.";
         }
-        return null;
     }
 
     public String write(String filePath, String data) {
@@ -250,38 +263,38 @@ public class P2PClient {
             List<User> connectedServers = this.masterObj.getConnectedServers();
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-                fileData = peer.writeFile(encryptedFilePath, encryption(data, encryptionKey));
+                String tempFileData = peer.writeFile(encryptedFilePath, encryption(data, encryptionKey));
+                if (fileData == null)
+                    fileData = tempFileData;
             }
             return fileData;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to write to file.";
         }
-        return null;
     }
 
     public String delete(String filePath) {
         try {
             String encryptedFilePath = "";
-            String response="";
+            String response = "";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            List<User>  users= this.masterObj.getPeerInfo(encryptedFilePath);
+            List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
             for (User user : users) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 response = peer.deleteFile(encryption(encryptedFilePath, encryptionKey));
             }
             return response;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to delete file.";
         }
-        return null;
     }
 
     public String restore(String filePath) {
         try {
             String encryptedFilePath = "";
-            String response="";
+            String response = "";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
@@ -292,9 +305,8 @@ public class P2PClient {
             }
             return response;
         } catch (Exception e) {
-            System.out.println(e);
+            return "Unable to restore file.";
         }
-        return null;
     }
 
     public String addUserToGroup(String userToAdd, String groupName) {
@@ -302,10 +314,8 @@ public class P2PClient {
             return this.masterObj.addUserToGroup(this.myUserName, userToAdd, groupName,
                     this.signWithPrivateKey(this.myUserName + userToAdd + groupName));
         } catch (Exception e) {
-            e.printStackTrace();
+            return "Unable to add user to group.";
         }
-
-        return null;
     }
 
     public String removeUserFromGroup(String userToRemove, String groupName) {
@@ -313,10 +323,8 @@ public class P2PClient {
             return this.masterObj.removeUserFromGroup(this.myUserName, userToRemove, groupName,
                     this.signWithPrivateKey(this.myUserName + userToRemove + groupName));
         } catch (Exception e) {
-            e.printStackTrace();
+            return "Unable to remove user from group.";
         }
-
-        return null;
     }
 
     public static void main(String args[]) {
@@ -372,6 +380,12 @@ public class P2PClient {
                     System.out.print("Enter filepath: ");
                     String fileName = userScan.nextLine();
                     System.out.println(client.addFileToGroup(fileName, groupName));
+                } else if (userChoice.equals("removeFileFromGroup")) {
+                    System.out.print("Enter groupname: ");
+                    String groupName = userScan.nextLine();
+                    System.out.print("Enter filepath: ");
+                    String fileName = userScan.nextLine();
+                    System.out.println(client.removeFileFromGroup(fileName, groupName));
                 } else if (userChoice.equals("addDirectoryToGroup")) {
                     System.out.print("Enter groupname: ");
                     String groupName = userScan.nextLine();
@@ -411,7 +425,7 @@ public class P2PClient {
 
             userScan.close();
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("An error was encountered in the client interface.");
         }
     }
 

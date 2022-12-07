@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
-    // private Map<String, String> users; // username -> userPublicKey
     String path;
     private HashMap<String, Boolean> fileDeletion; // filePath-> isDeleted
     String username;
@@ -31,13 +30,11 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                 fileDeletion = (HashMap<String, Boolean>) ois.readObject();
                 fis.close();
                 ois.close();
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-                return;
             } catch (ClassNotFoundException e) {
                 System.out.println("Class not found.");
-                e.printStackTrace();
+                return;
+            } catch (Exception e) {
+                System.out.println("An error occurred.");
                 return;
             }
         }
@@ -45,7 +42,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     }
 
     public String createDirectory(String dirPath) throws IOException, ExecutionException, InterruptedException {
-        FutureTask cDir = new FutureTask<String>(new Callable<String>() {
+        FutureTask<String> cDir = new FutureTask<>(new Callable<String>() {
             @Override
             public String call() throws Exception {
                 String newPath = path + dirPath;
@@ -60,8 +57,8 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String createFile(String filePath) throws IOException, ExecutionException, InterruptedException {
-        FutureTask create = new FutureTask<String>(new Callable<String>(){
-            public String call() throws Exception{
+        FutureTask<String> create = new FutureTask<>(new Callable<String>() {
+            public String call() throws Exception {
                 String newPath = path + filePath;
                 File fileObject = new File(newPath);
                 // Method createNewFile() method creates blank file
@@ -74,7 +71,6 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                         return "Error: File already exists.";
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     return "Error: Unable to add file, check required directories.";
                 }
                 return "File created successfully.";
@@ -86,7 +82,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String readFile(String filePath) throws IOException, ExecutionException, InterruptedException {
-        FutureTask read = new FutureTask<String>(new Callable<String>() {
+        FutureTask<String> read = new FutureTask<>(new Callable<String>() {
             @Override
             public String call() throws Exception {
                 String ans;
@@ -102,8 +98,8 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                             str.append(ans);
                         br.close();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    return "Error: Failed to read the file.";
                 }
                 return str.toString();
             }
@@ -113,10 +109,11 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
     }
 
     @Override
-    public String writeFile(String FilePath, String data) throws RemoteException, ExecutionException, InterruptedException {
-        FutureTask write = new FutureTask<String>(new Callable<String>() {
+    public String writeFile(String FilePath, String data)
+            throws RemoteException, ExecutionException, InterruptedException {
+        FutureTask<String> write = new FutureTask<>(new Callable<String>() {
             @Override
-            public String call() throws Exception{
+            public String call() throws Exception {
                 String newPath = path + FilePath;
                 try {
                     if (fileDeletion.get(newPath)) {
@@ -128,8 +125,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                         bw.close();
                         return "Successfully wrote to the file.";
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
                     return "Error: Failed to write to the file.";
                 }
             }
@@ -140,9 +136,9 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String restoreFiles(String filePath) throws RemoteException, ExecutionException, InterruptedException {
-        FutureTask restore = new FutureTask<String>(new Callable<String>() {
+        FutureTask<String> restore = new FutureTask<>(new Callable<String>() {
             @Override
-            public String call() throws Exception{
+            public String call() throws Exception {
                 String newPath = path + filePath;
                 if (!fileDeletion.get(newPath)) {
                     return "Error: Failed to restore file.";
@@ -160,7 +156,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
 
     @Override
     public String deleteFile(String filePath) throws RemoteException, ExecutionException, InterruptedException {
-        FutureTask delete = new FutureTask<String>(new Callable<String>() {
+        FutureTask<String> delete = new FutureTask<>(new Callable<String>() {
             @Override
             public String call() throws Exception {
                 String newPath = path + filePath;
@@ -186,8 +182,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             myObjectOutStream.close();
             myFileOutStream.close();
         } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            System.out.println("An error occurred in updating deleted files.");
         }
     }
 }

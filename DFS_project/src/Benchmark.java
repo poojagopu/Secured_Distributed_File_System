@@ -8,12 +8,14 @@ public class Benchmark {
 
         @Override
         public void run() {
-            System.out.println("Starting 10K work for " + Thread.currentThread().getName());
+            System.out.println("Starting 10K work for " + Thread.currentThread().getName() + " (ID: "
+                    + Thread.currentThread().getId() + ")");
 
             for (int i = 0; i < 9999; i++)
                 client.create("test" + i);
 
-            System.out.println("Completed 10K work for " + Thread.currentThread().getName());
+            System.out.println("Completed 10K work for " + Thread.currentThread().getName() + " (ID: "
+                    + Thread.currentThread().getId() + ")");
         }
     }
 

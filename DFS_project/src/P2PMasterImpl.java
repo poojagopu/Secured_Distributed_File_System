@@ -36,14 +36,10 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 allUsers = (HashSet<User>) ois.readObject();
                 fis.close();
                 ois.close();
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-                return;
             } catch (ClassNotFoundException e) {
-                System.out.println("Clasrs not found.");
-                e.printStackTrace();
-                return;
+                System.out.println("Class not found.");
+            } catch (Exception e) {
+                System.out.println("An error occurred.");
             }
         }
         System.out.println("Loaded configuration file " + allUsersDB.getPath());
@@ -60,14 +56,10 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 groups = (HashSet<Group>) ois.readObject();
                 fis.close();
                 ois.close();
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-                return;
             } catch (ClassNotFoundException e) {
                 System.out.println("Class not found.");
-                e.printStackTrace();
-                return;
+            } catch (Exception e) {
+                System.out.println("An error occurred.");
             }
         }
         System.out.println("Loaded configuration file " + groupsDB.getPath());
@@ -84,14 +76,10 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 filesystem = (HashMap<String, P2PFile>) ois.readObject();
                 fis.close();
                 ois.close();
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-                return;
             } catch (ClassNotFoundException e) {
                 System.out.println("Class not found.");
-                e.printStackTrace();
-                return;
+            } catch (Exception e) {
+                System.out.println("An error occurred.");
             }
         }
         System.out.println("Loaded configuration file " + filesystemDB.getPath());
@@ -99,11 +87,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
     @Override
     public List<User> getPeerInfo(String filePath) throws RemoteException {
-        if (filesystem.containsKey(filePath)) {
+        if (filesystem.containsKey(filePath))
             return filesystem.get(filePath).getLocations();
-        } else {
-            System.out.println("no such file path " + filePath);
-        }
         return null;
     }
 
@@ -235,7 +220,8 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         List<User> strippedUsers = new ArrayList<>();
         int i = 0;
         for (User user : connectedServers) {
-            if(i==this.replication) break;
+            if (i == this.replication)
+                break;
             i++;
             strippedUsers.add(new User(user.getName(), user.getIp(), user.getPort(),
                     user.getPKey(), null));
@@ -543,7 +529,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
                     for (String fileName : filesystem.keySet()) {
                         if (fileName.startsWith(encryptedFilePath)) {
-                            System.out.println(fileName + " " + filesystem.get(fileName).getType());
                             filesystem.get(fileName).addGroup(groupName);
                         }
                     }
@@ -574,7 +559,6 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
 
                     for (String fileName : filesystem.keySet()) {
                         if (fileName.startsWith(encryptedFilePath)) {
-                            System.out.println(fileName + " " + filesystem.get(fileName).getType());
                             filesystem.get(fileName).removeGroup(groupName);
                         }
                     }
