@@ -262,16 +262,16 @@ public class P2PClient {
     public String delete(String filePath) {
         try {
             String encryptedFilePath = "";
+            String response="";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
-            List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
-            User user = users.get(0);
-            RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-            String response = peer.deleteFile(encryption(encryptedFilePath, encryptionKey));
-            if (response != null) {
-                return response;
+            List<User>  users= this.masterObj.getPeerInfo(encryptedFilePath);
+            for (User user : users) {
+                RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
+                response = peer.deleteFile(encryption(encryptedFilePath, encryptionKey));
             }
+            return response;
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -281,16 +281,16 @@ public class P2PClient {
     public String restore(String filePath) {
         try {
             String encryptedFilePath = "";
+            String response="";
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
-            User user = users.get(0);
-            RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-            String response = peer.restoreFiles(encryption(encryptedFilePath, encryptionKey));
-            if (response != null) {
-                return response;
+            for (User user : users) {
+                RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
+                response = peer.restoreFiles(encryption(encryptedFilePath, encryptionKey));
             }
+            return response;
         } catch (Exception e) {
             System.out.println(e);
         }

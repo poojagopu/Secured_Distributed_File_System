@@ -15,6 +15,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     public Set<User> allUsers; // username -> userPublicKey
     public Set<Group> groups;
     public HashSet<User> connectedServers;
+    public int replication = 3;
 
     protected P2PMasterImpl() throws IOException {
         super();
@@ -232,7 +233,10 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     @Override
     public List<User> getConnectedServers() throws RemoteException {
         List<User> strippedUsers = new ArrayList<>();
+        int i = 0;
         for (User user : connectedServers) {
+            if(i==this.replication) break;
+            i++;
             strippedUsers.add(new User(user.getName(), user.getIp(), user.getPort(),
                     user.getPKey(), null));
         }
