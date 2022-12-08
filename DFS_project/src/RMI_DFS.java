@@ -61,19 +61,23 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             public String call() throws Exception {
                 String newPath = path + filePath;
                 File fileObject = new File(newPath);
-                // Method createNewFile() method creates blank file
-                fileObject.getParentFile().mkdirs();
-                try {
-                    if (fileObject.createNewFile()) {
-                        fileDeletion.put(newPath, false);
-                        updateDeletedFiles();
-                    } else {
-                        return "Error: File already exists.";
+                if (!fileDeletion.keySet().contains(newPath)) {
+                    fileObject.getParentFile().mkdirs();
+                    try {
+                        // Method createNewFile() creates blank file
+                        if (fileObject.createNewFile()) {
+                            fileDeletion.put(newPath, false);
+                            updateDeletedFiles();
+                        } else {
+                            return "Error: File already exists.";
+                        }
+                    } catch (Exception e) {
+                        return "Error: Unable to add file, check required directories.";
                     }
-                } catch (Exception e) {
-                    return "Error: Unable to add file, check required directories.";
+                    return "File created successfully.";
+                } else {
+                    return "Error: Unable to add file.";
                 }
-                return "File created successfully.";
             }
         });
         new Thread(create).start();
@@ -90,7 +94,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
                 StringBuilder str = new StringBuilder();
                 // Creating an object of BufferedReader class
                 try {
-                    if (fileDeletion.get(newPath)) {
+                    if (fileDeletion.keySet().contains(newPath) && fileDeletion.get(newPath)) {
                         return null;
                     } else {
                         BufferedReader br = new BufferedReader(new FileReader(newPath));

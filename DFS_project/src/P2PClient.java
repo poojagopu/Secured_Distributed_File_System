@@ -127,7 +127,7 @@ public class P2PClient {
                 if (response == null)
                     response = tempResponse;
             }
-            if (response != null)
+            if (response != null && !response.toLowerCase().contains("error"))
                 this.masterObj.updateHashTable(encryptedFilePath, connectedServers, myUserName, "File");
             else
                 response = "An error was encountered while creating the file.";
@@ -172,7 +172,9 @@ public class P2PClient {
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
             System.out.println("Retrieving file from peer at " + user.ip + ":" + user.port);
             fileData = peer.readFile(encryptedFilePath);
-            if (fileData == null || fileData.isEmpty())
+            if (fileData == null)
+                fileData = "Error: Unable to read file.";
+            else if (fileData.isEmpty())
                 fileData = "Notice: File is empty.";
             else
                 fileData = decryption(fileData, encryptionKey);
