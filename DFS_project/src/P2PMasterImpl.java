@@ -131,8 +131,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                 userInProgress.addGroup(group);
                                 updateAllUsers();
                                 updateGroups();
-                                return userToAddName + " was successfully added to " + currentUserName + "'s group ("
-                                        + group + ")";
+                                return userToAddName + " was successfully added to " + group;
                             } else {
                                 for (Group existingGroup : groups) {
                                     if (existingGroup.equals(groupTmp)
@@ -141,8 +140,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                         userInProgress.addGroup(group);
                                         updateAllUsers();
                                         updateGroups();
-                                        return userToAddName + " was successfully added to " + currentUserName
-                                                + "'s group (" + group + ")";
+                                        return userToAddName + " was successfully added to " + group;
                                     }
                                 }
                             }
@@ -152,7 +150,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
             }
         }
 
-        return userToAddName + " could not be added to " + currentUserName + "'s group (" + group + ")";
+        return userToAddName + " could not be added to " + group;
     }
 
     @Override
@@ -185,11 +183,11 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                                         for (String fileName : filesystem.keySet()) {
                                             if (filesystem.get(fileName).getOwner().equals(userToRemoveName)) {
                                                 filesystem.get(fileName).removeGroup(group);
-                                                System.out.println("removed " + fileName + " from " + group + " ("
-                                                        + userToRemoveName + ")");
                                             }
                                         }
                                         updateFilesystem();
+
+                                        return userToRemoveName + " was successfully removed from " + group;
                                     }
                                 }
                             }
@@ -198,7 +196,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                 }
             }
         }
-        return null;
+        return userToRemoveName + " could not be removed from " + group;
     }
 
     @Override
