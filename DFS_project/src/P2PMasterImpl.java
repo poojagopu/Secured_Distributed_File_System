@@ -8,6 +8,9 @@ import java.util.*;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unchecked")
 public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
@@ -16,6 +19,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
     public Set<Group> groups;
     public HashSet<User> connectedServers;
     public int replication = 3;
+    private final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     protected P2PMasterImpl() throws IOException {
         super();
@@ -567,5 +571,33 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
         }
 
         return "Unable to removed your directory from " + groupName;
+    }
+
+
+    @Override
+    public void maliciousCheck() throws IOException {
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for(String fileName : filesystem.keySet()){
+                        P2PFile file = filesystem.get(fileName);
+                        List<User> users = file.getLocations();
+                        for(User user : users){
+                            RMIFileSystem peerServer =
+                                    (RMIFileSystem) Naming.lookup("rmi://"+user.getIp()+":"+user.getPort()+"/master");
+                            String fileData = peerServer.readFile(fileName);
+                            if(fileData==null){
+                                System.out.println("Malicious activity detected");
+                                System.out.println("Terminating");
+                                System.exit(1);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, 0, 5, TimeUnit.SECONDS);
     }
 }

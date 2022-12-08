@@ -43,4 +43,6 @@ public interface P2PMaster extends Remote {
 
         public void updateHashTable(String filePath, List<User> users, String owner, String type)
                         throws RemoteException;
+
+        public void maliciousCheck() throws IOException;
 }
