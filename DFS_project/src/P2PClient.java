@@ -123,6 +123,7 @@ public class P2PClient {
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 String tempResponse = peer.createFile(encryptedFilePath);
+                System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
                 if (response == null)
                     response = tempResponse;
             }
@@ -146,6 +147,7 @@ public class P2PClient {
             List<User> connectedServers = this.masterObj.getConnectedServers();
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
+                System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
                 ans = peer.createDirectory(encryptedFilePath);
             }
             if (ans != null)
@@ -168,6 +170,7 @@ public class P2PClient {
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
             User user = users.get(0);
             RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
+            System.out.println("Retrieving file from peer at " + user.ip + ":" + user.port);
             fileData = peer.readFile(encryptedFilePath);
             if (fileData == null || fileData.isEmpty())
                 fileData = "Notice: File is empty.";
@@ -188,9 +191,8 @@ public class P2PClient {
             }
             fileData = this.masterObj.readOthersFile(encryptedFilePath, myUserName, groupName, userName,
                     signWithPrivateKey(encryptedFilePath + myUserName + groupName + userName));
-            if (fileData == null) {
+            if (fileData == null)
                 fileData = "Notice: File is empty.";
-            }
         } catch (Exception e) {
             fileData = "Error: Unable to read file.";
         }
@@ -260,9 +262,10 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             String fileData = null;
-            List<User> connectedServers = this.masterObj.getConnectedServers();
+            List<User> connectedServers = this.masterObj.getPeerInfo(encryptedFilePath);
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
+                System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
                 String tempFileData = peer.writeFile(encryptedFilePath, encryption(data, encryptionKey));
                 if (fileData == null)
                     fileData = tempFileData;
@@ -276,14 +279,17 @@ public class P2PClient {
     public String delete(String filePath) {
         try {
             String encryptedFilePath = "";
-            String response = "";
+            String response = null;
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
             for (User user : users) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-                response = peer.deleteFile(encryption(encryptedFilePath, encryptionKey));
+                System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
+                String tempResponse = peer.deleteFile(encryptedFilePath);
+                if (response == null)
+                    response = tempResponse;
             }
             return response;
         } catch (Exception e) {
@@ -294,14 +300,17 @@ public class P2PClient {
     public String restore(String filePath) {
         try {
             String encryptedFilePath = "";
-            String response = "";
+            String response = null;
             for (String part : filePath.split("/")) {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
             for (User user : users) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
-                response = peer.restoreFiles(encryption(encryptedFilePath, encryptionKey));
+                System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
+                String tempResponse = peer.restoreFiles(encryptedFilePath);
+                if (response == null)
+                    response = tempResponse;
             }
             return response;
         } catch (Exception e) {

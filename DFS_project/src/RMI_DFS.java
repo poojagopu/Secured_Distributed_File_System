@@ -140,7 +140,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             @Override
             public String call() throws Exception {
                 String newPath = path + filePath;
-                if (!fileDeletion.get(newPath)) {
+                if (fileDeletion.keySet().contains(newPath) && !fileDeletion.get(newPath)) {
                     return "Error: Failed to restore file.";
                 } else {
                     fileDeletion.put(newPath, false);
@@ -160,7 +160,7 @@ public class RMI_DFS extends UnicastRemoteObject implements RMIFileSystem {
             @Override
             public String call() throws Exception {
                 String newPath = path + filePath;
-                if (fileDeletion.get(newPath)) {
+                if (fileDeletion.keySet().contains(newPath) && fileDeletion.get(newPath)) {
                     return "Error: Failed to delete file.";
                 } else {
                     fileDeletion.put(newPath, true);
