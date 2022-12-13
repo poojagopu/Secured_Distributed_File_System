@@ -120,6 +120,7 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> connectedServers = this.masterObj.getConnectedServers();
+            System.out.println("Encrypted paramaters: " + encryptedFilePath);
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 String tempResponse = peer.createFile(encryptedFilePath);
@@ -145,6 +146,7 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> connectedServers = this.masterObj.getConnectedServers();
+            System.out.println("Encrypted paramaters: " + encryptedFilePath);
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
@@ -265,6 +267,7 @@ public class P2PClient {
             }
             String fileData = null;
             List<User> connectedServers = this.masterObj.getPeerInfo(encryptedFilePath);
+            System.out.println("Encrypted paramaters: " + encryptedFilePath);
             for (User user : connectedServers) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
@@ -286,6 +289,7 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
+            System.out.println("Encrypted paramaters: " + encryptedFilePath);
             for (User user : users) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);
@@ -307,6 +311,7 @@ public class P2PClient {
                 encryptedFilePath += "/" + encryption(part, encryptionKey);
             }
             List<User> users = this.masterObj.getPeerInfo(encryptedFilePath);
+            System.out.println("Encrypted paramaters: " + encryptedFilePath);
             for (User user : users) {
                 RMIFileSystem peer = (RMIFileSystem) Naming.lookup("rmi://" + user.ip + ":" + user.port + "/master");
                 System.out.println("Replicating changes to peer at " + user.ip + ":" + user.port);

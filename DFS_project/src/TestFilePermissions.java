@@ -51,6 +51,8 @@ public class TestFilePermissions {
             // Bob fails to read file1.txt
             System.out.println("\n[+] Bob tries to read Ray's file1.txt (UNAUTHORIZED)");
             System.out.println(bob.read("file1.txt", "group1", "ray"));
+
+            Thread.sleep(30 * 1000);
         } catch (Exception e) {
             e.printStackTrace();
         }

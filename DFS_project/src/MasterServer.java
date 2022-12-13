@@ -15,6 +15,7 @@ public class MasterServer {
             // Binds the remote object by the name
             // usingRMI
             Naming.rebind("rmi://localhost:1234" + "/master", interface_obj);
+            interface_obj.maliciousCheck();
         } catch (Exception ae) {
             System.out.println(ae);
         }

@@ -587,7 +587,7 @@ public class P2PMasterImpl extends UnicastRemoteObject implements P2PMaster {
                             RMIFileSystem peerServer =
                                     (RMIFileSystem) Naming.lookup("rmi://"+user.getIp()+":"+user.getPort()+"/master");
                             String fileData = peerServer.readFile(fileName);
-                            if(fileData==null){
+                            if(fileData==null || fileData.equals("Error: Failed to read the file.")){
                                 System.out.println("Malicious activity detected");
                                 System.out.println("Terminating");
                                 System.exit(1);

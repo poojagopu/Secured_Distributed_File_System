@@ -11,7 +11,7 @@ public class Benchmark {
             System.out.println("Starting 100K work for " + Thread.currentThread().getName() + " (ID: "
                     + Thread.currentThread().getId() + ")");
 
-            for (int i = 0; i < 99999; i++) {
+            for (int i = 0; i < 10; i++) {
                 System.out.println(Thread.currentThread().getName() + " (ID: " + Thread.currentThread().getId() + ")\t"
                         + client.create("file" + i));
                 System.out.println(Thread.currentThread().getName() + " (ID: " + Thread.currentThread().getId() + ")\t"
