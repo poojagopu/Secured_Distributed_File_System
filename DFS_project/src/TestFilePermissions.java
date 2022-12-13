@@ -46,6 +46,7 @@ public class TestFilePermissions {
             // Ray revokes Bob's permission to group1 files
             System.out.println("\n[+] Ray removes Bob from group1");
             System.out.println(ray.removeUserFromGroup("bob", "group1"));
+            Thread.sleep(1 * 1000);
 
             // Bob fails to read file1.txt
             System.out.println("\n[+] Bob tries to read Ray's file1.txt (UNAUTHORIZED)");
